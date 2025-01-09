@@ -29,15 +29,14 @@ jobs:
           run_install: false
 
       - name: Install Dependencies
-        run: |
-          mkdir -p $HOME/.local/share/pnpm/store
-          pnpm config set store-dir $HOME/.local/share/pnpm/store
-          cd web
-          pnpm install --no-frozen-lockfile --shamefully-hoist
+        run: pnpm install --no-frozen-lockfile
         env:
           HUSKY_SKIP_INSTALL: 1
           NODE_OPTIONS: '--max_old_space_size=4096'
           CI: true
+          NPM_CONFIG_REGISTRY: 'https://registry.npmjs.org'
+          PNPM_HOME: '/github/home/.pnpm'
+          STORE_DIR: '/github/home/.pnpm/store'
 
       - name: Run Web Tests
         working-directory: ./web
