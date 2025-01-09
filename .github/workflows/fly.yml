@@ -29,11 +29,12 @@ jobs:
           run_install: false
 
       - name: Install Dependencies
-        working-directory: ./web
         run: |
-          mkdir -p ~/.local/share/pnpm/store
-          pnpm config set store-dir ~/.local/share/pnpm/store
-          pnpm install --no-verify-store-integrity
+          sudo mkdir -p /usr/local/pnpm/store
+          sudo chmod 777 /usr/local/pnpm/store
+          pnpm config set store-dir /usr/local/pnpm/store
+          cd web
+          pnpm install --prefer-offline
         env:
           SKIP_LOST_FOUND: true
           NODE_OPTIONS: '--max_old_space_size=4096'
