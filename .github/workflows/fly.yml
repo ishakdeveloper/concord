@@ -32,7 +32,8 @@ jobs:
         run: |
           mkdir -p /tmp/pnpm-store
           pnpm config set store-dir /tmp/pnpm-store
-          pnpm install --no-frozen-lockfile --prefer-offline --ignore-scripts
+          pnpm install --no-frozen-lockfile --prefer-offline --ignore-scripts --filter '!lost+found'
+
         env:
           HUSKY_SKIP_INSTALL: 1
           NODE_OPTIONS: '--max_old_space_size=4096'
