@@ -1,0 +1,158 @@
+name: Fly Deploy
+on:
+  push:
+    branches:
+      - master
+      - staging
+  pull_request:
+    branches:
+      - master
+      - staging
+      - dev
+
+jobs:
+  test-web:
+    name: Test Web App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Run Web Tests
+        working-directory: ./web
+        run: pnpm test
+
+  test-server:
+    name: Test Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        working-directory: ./server
+        run: bun install
+
+      - name: Run Server Tests
+        working-directory: ./server
+        run: bun test
+
+  deploy-production:
+    name: Deploy Production
+    needs: [test-web, test-server]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production_environment
+    env:
+      PROD_API_URL: https://api.concord.fly.dev
+      PROD_WEB_URL: https://concord.fly.dev
+      PROD_WS_URL: wss://ws.concord.fly.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Fly
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # Deploy API first
+      - name: Deploy API to Production
+        run: |
+          flyctl deploy --remote-only --app concord-api \
+            --env URL="${PROD_API_URL}" \
+            --env CORS_ORIGIN="${PROD_WEB_URL}" \
+            --env ALLOWED_ORIGINS="${PROD_WEB_URL},${PROD_WS_URL}" \
+            --env DISCORD_CLIENT_ID="${{ secrets.PROD_DISCORD_CLIENT_ID }}" \
+            --env DISCORD_CLIENT_SECRET="${{ secrets.PROD_DISCORD_CLIENT_SECRET }}" \
+            --env GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}" \
+            --env GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}" \
+            --env GITHUB_CLIENT_ID="${{ secrets.PROD_GITHUB_CLIENT_ID }}" \
+            --env GITHUB_CLIENT_SECRET="${{ secrets.PROD_GITHUB_CLIENT_SECRET }}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Then deploy Web
+      - name: Deploy Web to Production
+        run: |
+          flyctl deploy --remote-only --app concord-web \
+            --env NEXT_PUBLIC_URL="${PROD_WEB_URL}" \
+            --env NEXT_PUBLIC_API_URL="${PROD_API_URL}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Deploy WebSocket server
+      - name: Deploy WebSocket to Production
+        run: |
+          flyctl deploy --remote-only --app concord-ws \
+            --config ws/fly.toml \
+            --env URL="${PROD_WS_URL}" \
+            --env CORS_ORIGIN="${PROD_WEB_URL}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-staging:
+    name: Deploy Staging
+    needs: [test-web, test-server]
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency: staging_environment
+    env:
+      STAGING_API_URL: https://staging.api.concord.fly.dev
+      STAGING_WEB_URL: https://staging.concord.fly.dev
+      STAGING_WS_URL: wss://staging.ws.concord.fly.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Fly
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # Deploy API first
+      - name: Deploy API to Staging
+        run: |
+          flyctl deploy --remote-only --app concord-api-staging \
+            --env URL="${STAGING_API_URL}" \
+            --env CORS_ORIGIN="${STAGING_WEB_URL}" \
+            --env ALLOWED_ORIGINS="${STAGING_WEB_URL},${STAGING_WS_URL}" \
+            --env DISCORD_CLIENT_ID="${{ secrets.STAGING_DISCORD_CLIENT_ID }}" \
+            --env DISCORD_CLIENT_SECRET="${{ secrets.STAGING_DISCORD_CLIENT_SECRET }}" \
+            --env GOOGLE_CLIENT_ID="${{ secrets.STAGING_GOOGLE_CLIENT_ID }}" \
+            --env GOOGLE_CLIENT_SECRET="${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}" \
+            --env GITHUB_CLIENT_ID="${{ secrets.STAGING_GITHUB_CLIENT_ID }}" \
+            --env GITHUB_CLIENT_SECRET="${{ secrets.STAGING_GITHUB_CLIENT_SECRET }}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Then deploy Web
+      - name: Deploy Web to Staging
+        run: |
+          flyctl deploy --remote-only --app concord-web-staging \
+            --env NEXT_PUBLIC_URL="${STAGING_WEB_URL}" \
+            --env NEXT_PUBLIC_API_URL="${STAGING_API_URL}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Deploy WebSocket server
+      - name: Deploy WebSocket to Staging
+        run: |
+          flyctl deploy --remote-only --app concord-ws-staging \
+            --config ws/fly.toml \
+            --env URL="${STAGING_WS_URL}" \
+            --env CORS_ORIGIN="${STAGING_WEB_URL}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

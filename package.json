@@ -4,17 +4,42 @@
   "description": "",
   "main": "index.js",
   "private": true,
-  "packages": [
-    "/*"
-  ],
   "scripts": {
+    "dev": "concurrently \"cd web && pnpm dev\" \"cd server && bun dev\" \"cd ws && mix phx.server\"",
+    "dev:web": "cd web && pnpm dev",
+    "dev:server": "cd server && bun dev",
+    "dev:ws": "cd ws && mix phx.server",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky install"
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged",
+    "commit-msg": "commitlint --edit",
+    "setup:env": "cp web/.env.example web/.env.development && cp server/.env.example server/.env.development && cp ws/.env.example ws/.env.development",
+    "deploy:prod": "fly deploy",
+    "deploy:prod:web": "fly deploy --config web/fly.toml --app concord-web",
+    "deploy:prod:api": "fly deploy --config server/fly.toml --app concord-api",
+    "deploy:staging:web": "fly deploy --config web/fly.toml --app concord-web-staging",
+    "deploy:staging:api": "fly deploy --config server/fly.toml --app concord-api-staging"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "husky": "^8.0.3"
+    "@commitlint/cli": "^18.6.0",
+    "@commitlint/config-conventional": "^18.6.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint --fix",
+    "*.{js,jsx,ts,tsx,json,md,yml,yaml}": "prettier --write",
+    "*.{ex,exs}": "mix format"
   }
 }

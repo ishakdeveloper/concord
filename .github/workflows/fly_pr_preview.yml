@@ -1,0 +1,76 @@
+name: PR Preview Apps
+
+on:
+  pull_request:
+    types: [labeled, synchronize, opened, reopened, closed]
+
+concurrency:
+  group: ${{ github.workflow }}-pr-${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  PR_NUMBER: ${{ github.event.number }}
+  PR_WEB_URL: https://pr-${{ github.event.number }}-concord-web.fly.dev
+  PR_API_URL: https://pr-${{ github.event.number }}-concord-api.fly.dev
+  PR_WS_URL: wss://pr-${{ github.event.number }}-concord-ws.fly.dev
+
+jobs:
+  preview-apps:
+    if: contains(github.event.pull_request.labels.*.name, 'preview')
+    runs-on: ubuntu-latest
+    name: Deploy Preview Apps
+    environment:
+      name: pr-${{ github.event.number }}
+      url: ${{ env.PR_WEB_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Deploy API Preview
+      - name: Deploy API Preview
+        uses: superfly/fly-pr-review-apps@1.2.0
+        id: deploy-api
+        with:
+          config: server/fly.toml
+          app-name: pr-${{ github.event.number }}-concord-api
+          region: lax
+          postgres: concord-preview-db
+          env: |
+            URL=${{ env.PR_API_URL }}
+            CORS_ORIGIN=${{ env.PR_WEB_URL }}
+            ALLOWED_ORIGINS=${{ env.PR_WEB_URL }},${{ env.PR_WS_URL }}
+            DISCORD_CLIENT_ID=${{ secrets.STAGING_DISCORD_CLIENT_ID }}
+            DISCORD_CLIENT_SECRET=${{ secrets.STAGING_DISCORD_CLIENT_SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.STAGING_GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}
+            GITHUB_CLIENT_ID=${{ secrets.STAGING_GITHUB_CLIENT_ID }}
+            GITHUB_CLIENT_SECRET=${{ secrets.STAGING_GITHUB_CLIENT_SECRET }}
+
+      # Deploy WebSocket Preview
+      - name: Deploy WebSocket Preview
+        uses: superfly/fly-pr-review-apps@1.2.0
+        id: deploy-ws
+        with:
+          config: ws/fly.toml
+          app-name: pr-${{ github.event.number }}-concord-ws
+          region: lax
+          env: |
+            URL=${{ env.PR_WS_URL }}
+            CORS_ORIGIN=${{ env.PR_WEB_URL }}
+
+      # Deploy Web Preview
+      - name: Deploy Web Preview
+        uses: superfly/fly-pr-review-apps@1.2.0
+        id: deploy-web
+        with:
+          config: web/fly.toml
+          app-name: pr-${{ github.event.number }}-concord-web
+          region: lax
+          env: |
+            NEXT_PUBLIC_URL=${{ env.PR_WEB_URL }}
+            NEXT_PUBLIC_API_URL=${{ env.PR_API_URL }}
+            NEXT_PUBLIC_WS_URL=${{ env.PR_WS_URL }}
