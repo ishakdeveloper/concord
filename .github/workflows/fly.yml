@@ -28,27 +28,16 @@ jobs:
           version: 8
           run_install: false
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
       - name: Install Dependencies
-        working-directory: ./web
         run: |
-          pnpm install --ignore-scripts
+          mkdir -p $HOME/.local/share/pnpm/store
+          pnpm config set store-dir $HOME/.local/share/pnpm/store
+          cd web
+          pnpm install --no-frozen-lockfile --shamefully-hoist
         env:
           HUSKY_SKIP_INSTALL: 1
           NODE_OPTIONS: '--max_old_space_size=4096'
+          CI: true
 
       - name: Run Web Tests
         working-directory: ./web
