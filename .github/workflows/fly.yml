@@ -15,11 +15,13 @@ jobs:
     name: Test Web App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
           submodules: false
           fetch-depth: 1
+          recursive: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,7 +38,8 @@ jobs:
         working-directory: ./web
         run: |
           git config --global core.hooksPath /dev/null
-          pnpm install --ignore-scripts --no-frozen-lockfile
+          git config --global advice.detachedHead false
+          pnpm install --ignore-scripts --no-frozen-lockfile --prefer-offline
         env:
           HUSKY: '0'
           HUSKY_SKIP_INSTALL: '1'
