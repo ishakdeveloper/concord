@@ -29,12 +29,12 @@ jobs:
           run_install: false
 
       - name: Install Dependencies
+        working-directory: ./web
         run: |
-          mkdir -p /home/runner/.pnpm-store
-          pnpm config set store-dir /home/runner/.pnpm-store
-          pnpm install --no-frozen-lockfile
+          pnpm install
         env:
           SKIP_LOST_FOUND: true
+          NODE_OPTIONS: '--max_old_space_size=4096'
 
       - name: Run Web Tests
         working-directory: ./web
