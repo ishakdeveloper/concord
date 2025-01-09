@@ -17,8 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Disable Git hooks during checkout
           persist-credentials: false
+          submodules: false
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,7 +36,7 @@ jobs:
         working-directory: ./web
         run: |
           git config --global core.hooksPath /dev/null
-          pnpm install --ignore-scripts
+          pnpm install --ignore-scripts --no-frozen-lockfile
         env:
           HUSKY: '0'
           HUSKY_SKIP_INSTALL: '1'
@@ -43,6 +44,7 @@ jobs:
           CI: true
           SKIP_LOST_FOUND: true
           PNPM_HOME: ${{ runner.temp }}/pnpm
+          GIT_TERMINAL_PROMPT: '0'
 
       - name: Run Web Tests
         working-directory: ./web
