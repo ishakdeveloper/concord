@@ -21,23 +21,6 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Fix Git configuration
-        run: |
-          # Remove any existing submodule configurations
-          if [ -f .gitmodules ]; then
-            rm .gitmodules
-          fi
-
-          # Clean up git config
-          git config --local --unset-all submodule.web.url || true
-          git config --local --unset-all submodule.web.active || true
-
-          # Remove submodule directories if they exist
-          rm -rf .git/modules/web || true
-
-          # Ensure the web directory exists
-          mkdir -p web
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -50,17 +33,11 @@ jobs:
           run_install: false
 
       - name: Install Dependencies
+        working-directory: ./web
         run: |
-          git config --global core.hooksPath /dev/null
-          git config --global advice.detachedHead false
-          pnpm install --ignore-scripts --no-frozen-lockfile --shamefully-hoist
+          pnpm install --frozen-lockfile
         env:
-          HUSKY: '0'
-          HUSKY_SKIP_INSTALL: '1'
-          NODE_OPTIONS: '--max_old_space_size=4096'
           CI: true
-          PNPM_HOME: ${{ runner.temp }}/pnpm
-          GIT_TERMINAL_PROMPT: '0'
 
       - name: Run Web Tests
         working-directory: ./web
@@ -120,6 +97,17 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+      # Deploy WebSocket server
+      - name: Deploy WebSocket to Production
+        run: |
+          flyctl deploy --remote-only --app concord-ws \
+            --dockerfile ws/Dockerfile \
+            --config ws/fly.toml \
+            --env URL="${PROD_WS_URL}" \
+            --env CORS_ORIGIN="${PROD_WEB_URL}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       # Then deploy Web
       - name: Deploy Web to Production
         run: |
@@ -129,17 +117,6 @@ jobs:
             --env NEXT_PUBLIC_API_URL="${PROD_API_URL}" \
             --env NEXT_PUBLIC_WS_URL="${PROD_WS_URL}" \
             --env NODE_ENV="production"
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      # Deploy WebSocket server
-      - name: Deploy WebSocket to Production
-        run: |
-          flyctl deploy --remote-only --app concord-ws \
-            --dockerfile ws/Dockerfile \
-            --config ws/fly.toml \
-            --env URL="${PROD_WS_URL}" \
-            --env CORS_ORIGIN="${PROD_WEB_URL}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -164,6 +141,7 @@ jobs:
       - name: Deploy API to Staging
         run: |
           flyctl deploy --remote-only --app concord-api-staging \
+            --dockerfile server/Dockerfile \
             --env DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}" \
             --env URL="${STAGING_API_URL}" \
             --env CORS_ORIGIN="${STAGING_WEB_URL}" \
@@ -177,6 +155,17 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+      # Deploy WebSocket server
+      - name: Deploy WebSocket to Staging
+        run: |
+          flyctl deploy --remote-only --app concord-ws-staging \
+            --dockerfile ws/Dockerfile \
+            --config ws/fly.toml \
+            --env URL="${STAGING_WS_URL}" \
+            --env CORS_ORIGIN="${STAGING_WEB_URL}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       # Then deploy Web
       - name: Deploy Web to Staging
         run: |
@@ -186,15 +175,5 @@ jobs:
             --env NEXT_PUBLIC_API_URL="${STAGING_API_URL}" \
             --env NEXT_PUBLIC_WS_URL="${STAGING_WS_URL}" \
             --env NODE_ENV="production"
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      # Deploy WebSocket server
-      - name: Deploy WebSocket to Staging
-        run: |
-          flyctl deploy --remote-only --app concord-ws-staging \
-            --config ws/fly.toml \
-            --env URL="${STAGING_WS_URL}" \
-            --env CORS_ORIGIN="${STAGING_WEB_URL}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
