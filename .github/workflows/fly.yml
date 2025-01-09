@@ -15,12 +15,18 @@ jobs:
     name: Test Web App
     runs-on: ubuntu-latest
     steps:
+      - name: Clean Git Config
+        run: |
+          rm -f .gitmodules || true
+          rm -rf .git/modules/* || true
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           submodules: false
           fetch-depth: 1
+          clean: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,13 +42,15 @@ jobs:
       - name: Install Root Dependencies
         run: |
           git config --global core.hooksPath /dev/null
-          pnpm install --ignore-scripts --no-frozen-lockfile
+          git config --global advice.detachedHead false
+          pnpm install --ignore-scripts --no-frozen-lockfile --shamefully-hoist
         env:
           HUSKY: '0'
           HUSKY_SKIP_INSTALL: '1'
           NODE_OPTIONS: '--max_old_space_size=4096'
           CI: true
           PNPM_HOME: ${{ runner.temp }}/pnpm
+          GIT_TERMINAL_PROMPT: '0'
 
       - name: Run Web Tests
         working-directory: ./web
