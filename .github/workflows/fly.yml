@@ -15,18 +15,28 @@ jobs:
     name: Test Web App
     runs-on: ubuntu-latest
     steps:
-      - name: Clean Git Config
-        run: |
-          rm -f .gitmodules || true
-          rm -rf .git/modules/* || true
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          submodules: false
           fetch-depth: 1
-          clean: true
+
+      - name: Fix Git configuration
+        run: |
+          # Remove any existing submodule configurations
+          if [ -f .gitmodules ]; then
+            rm .gitmodules
+          fi
+
+          # Clean up git config
+          git config --local --unset-all submodule.web.url || true
+          git config --local --unset-all submodule.web.active || true
+
+          # Remove submodule directories if they exist
+          rm -rf .git/modules/web || true
+
+          # Ensure the web directory exists
+          mkdir -p web
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,7 +49,7 @@ jobs:
           version: 8.15.4
           run_install: false
 
-      - name: Install Root Dependencies
+      - name: Install Dependencies
         run: |
           git config --global core.hooksPath /dev/null
           git config --global advice.detachedHead false
