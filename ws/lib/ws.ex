@@ -8,6 +8,10 @@ defmodule Ws.Router do
   plug :match
   plug :dispatch
 
+  get "/health" do
+    send_resp(conn, 200, "ok")
+  end
+
   options _ do
     send_resp(conn, 200, "")
   end

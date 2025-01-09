@@ -39,6 +39,10 @@ const app = new Elysia()
     })
   )
   .use(swagger())
+  .get('/health', () => ({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+  }))
   .group('/api', (app) => app.get('/hello', () => 'Hello World'))
   .all('/api/auth/*', betterAuthView)
   .listen(config.port);

@@ -74,6 +74,8 @@ jobs:
       - name: Deploy API to Production
         run: |
           flyctl deploy --remote-only --app concord-api \
+            --dockerfile server/Dockerfile \
+            --env DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}" \
             --env URL="${PROD_API_URL}" \
             --env CORS_ORIGIN="${PROD_WEB_URL}" \
             --env ALLOWED_ORIGINS="${PROD_WEB_URL},${PROD_WS_URL}" \
@@ -90,6 +92,7 @@ jobs:
       - name: Deploy Web to Production
         run: |
           flyctl deploy --remote-only --app concord-web \
+            --dockerfile web/Dockerfile \
             --env NEXT_PUBLIC_URL="${PROD_WEB_URL}" \
             --env NEXT_PUBLIC_API_URL="${PROD_API_URL}"
         env:
@@ -99,6 +102,7 @@ jobs:
       - name: Deploy WebSocket to Production
         run: |
           flyctl deploy --remote-only --app concord-ws \
+            --dockerfile ws/Dockerfile \
             --config ws/fly.toml \
             --env URL="${PROD_WS_URL}" \
             --env CORS_ORIGIN="${PROD_WEB_URL}"
@@ -126,6 +130,7 @@ jobs:
       - name: Deploy API to Staging
         run: |
           flyctl deploy --remote-only --app concord-api-staging \
+            --env DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}" \
             --env URL="${STAGING_API_URL}" \
             --env CORS_ORIGIN="${STAGING_WEB_URL}" \
             --env ALLOWED_ORIGINS="${STAGING_WEB_URL},${STAGING_WS_URL}" \
