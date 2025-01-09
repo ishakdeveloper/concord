@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Disable Git hooks during checkout
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -31,14 +34,15 @@ jobs:
       - name: Install Dependencies
         working-directory: ./web
         run: |
-          pnpm config set store-dir ./.pnpm-store
-          pnpm install --no-frozen-lockfile
+          git config --global core.hooksPath /dev/null
+          pnpm install --ignore-scripts
         env:
-          HUSKY_SKIP_INSTALL: 1
+          HUSKY: '0'
+          HUSKY_SKIP_INSTALL: '1'
           NODE_OPTIONS: '--max_old_space_size=4096'
           CI: true
-          PNPM_HOME: ${{ runner.temp }}/pnpm
           SKIP_LOST_FOUND: true
+          PNPM_HOME: ${{ runner.temp }}/pnpm
 
       - name: Run Web Tests
         working-directory: ./web
