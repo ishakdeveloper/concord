@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Ensure output shows in terminal
+exec >/dev/tty 2>&1
+
 pnpm pre-commit

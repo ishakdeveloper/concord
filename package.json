@@ -14,7 +14,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "prepare": "husky install",
     "pre-commit": "lint-staged",
-    "commit-msg": "commitlint --edit",
+    "commit-msg": "commitlint --edit $1",
     "setup:env": "cp web/.env.example web/.env.development && cp server/.env.example server/.env.development && cp ws/.env.example ws/.env.development",
     "deploy:prod": "fly deploy",
     "deploy:prod:web": "fly deploy --config web/fly.toml --app concord-web",
@@ -37,11 +37,5 @@
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.0"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --cache --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": "prettier --write"
-  }
+  "lint-staged": undefined
 }
