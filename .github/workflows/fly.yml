@@ -25,14 +25,14 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 8.6.0
           run_install: false
 
       - name: Install Dependencies
         run: |
           mkdir -p /tmp/pnpm-store
           pnpm config set store-dir /tmp/pnpm-store
-          pnpm install --no-frozen-lockfile --prefer-offline --ignore-scripts --filter '!lost+found'
+          pnpm install --no-frozen-lockfile
 
         env:
           HUSKY_SKIP_INSTALL: 1
