@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
+export const revalidate = 0; // Disable caching
 
 export async function GET() {
   try {
@@ -17,8 +18,11 @@ export async function GET() {
     return NextResponse.json(response, {
       status: 200,
       headers: {
-        'Cache-Control': 'no-store, must-revalidate',
+        'Cache-Control':
+          'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Content-Type': 'application/json',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   } catch (error) {

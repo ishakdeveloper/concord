@@ -21,10 +21,10 @@ primary_region = "lax"
   routers = 2
 
   [[http_service.checks]]
-    grace_period = "60s"
+    grace_period = "180s"
     interval = "30s"
     method = "GET"
-    timeout = "20s"
+    timeout = "30s"
     path = "/api/health"
     protocol = "http"
     tls_skip_verify = true
@@ -36,4 +36,4 @@ primary_region = "lax"
 
 [deploy]
   strategy = "bluegreen"
-  wait_timeout = "300s"
+  wait_timeout = "360s"
