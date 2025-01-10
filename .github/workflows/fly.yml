@@ -171,8 +171,8 @@ jobs:
           # Install pnpm for web deployment
           npm install -g pnpm@8.15.4
 
-          # Install dependencies
-          pnpm install --frozen-lockfile
+          # Install dependencies without frozen lockfile
+          pnpm install --no-frozen-lockfile
 
           # Deploy web app
           flyctl deploy --remote-only --app concord-web \
