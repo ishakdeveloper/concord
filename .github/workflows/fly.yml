@@ -148,11 +148,9 @@ jobs:
       # Deploy WebSocket server
       - name: Deploy WebSocket to Production
         run: |
-          # Install Elixir and Erlang
-          wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb
-          sudo dpkg -i erlang-solutions_2.0_all.deb
+          # Install Erlang and Elixir from Ubuntu repos
           sudo apt-get update
-          sudo apt-get install -y esl-erlang elixir
+          sudo apt-get install -y erlang elixir
 
           # Deploy with increased timeout
           flyctl deploy --remote-only --app concord-ws \
@@ -160,7 +158,6 @@ jobs:
             --config fly.toml \
             --env URL="${PROD_WS_URL}" \
             --env CORS_ORIGIN="${PROD_WEB_URL}" \
-            --env NODE_ENV="production" \
             --env MIX_ENV="prod" \
             --strategy immediate \
             --wait-timeout 300
