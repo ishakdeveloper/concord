@@ -2,16 +2,15 @@ FROM oven/bun:1 as builder
 
 WORKDIR /app
 
-# Copy package files for the server
-COPY server/package.json server/
-COPY server/bun.lockb server/
-COPY server/tsconfig.json server/
+# Copy package files
+COPY package.json .
+COPY bun.lockb .
+COPY tsconfig.json .
 
 # Copy source code
-COPY server/src server/src
+COPY src/ src/
 
 # Install dependencies
-WORKDIR /app/server
 RUN bun install --frozen-lockfile
 
 # Build the application
@@ -23,7 +22,7 @@ FROM oven/bun:1-slim
 WORKDIR /app
 
 # Copy the built application
-COPY --from=builder /app/server/server .
+COPY --from=builder /app/server .
 
 # Set environment variables
 ENV NODE_ENV=production
