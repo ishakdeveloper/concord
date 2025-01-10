@@ -18,15 +18,6 @@ primary_region = "lax"
   min_machines_running = 1
   processes = ["app"]
 
-  [[http_service.checks]]
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "30s"
-    method = "GET"
-    path = "/api/health"
-    protocol = "http"
-    tls_skip_verify = false
-
   [http_service.concurrency]
     type = "connections"
     hard_limit = 1000

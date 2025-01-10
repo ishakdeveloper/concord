@@ -18,15 +18,6 @@ primary_region = "ams"
   soft_stop = true
   routers = 2
 
-  [[http_service.checks]]
-    grace_period = "60s"
-    interval = "30s"
-    method = "GET"
-    timeout = "20s"
-    path = "/health"
-    protocol = "http"
-    tls_skip_verify = true
-
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
