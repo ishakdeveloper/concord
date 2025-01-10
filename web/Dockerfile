@@ -8,11 +8,11 @@ RUN apk add --no-cache curl && \
 
 WORKDIR /app
 
-# Copy package files first
-COPY package.json pnpm-lock.yaml ./
+# Copy package files first (only package.json since we don't have lock file)
+COPY package.json ./
 
-# Install dependencies with specific flags for production
-RUN pnpm install --frozen-lockfile --prod
+# Install dependencies with production flags
+RUN pnpm install --prod
 
 # Copy source files
 COPY . .
