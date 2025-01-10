@@ -119,7 +119,18 @@ jobs:
           flyctl deploy --remote-only --app concord-api \
             --dockerfile server/Dockerfile \
             --config server/fly.toml \
-            --env-file server/.env.production
+            --env DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}" \
+            --env URL="${PROD_API_URL}" \
+            --env CORS_ORIGIN="${PROD_WEB_URL}" \
+            --env ALLOWED_ORIGINS="${PROD_WEB_URL},${PROD_WS_URL}" \
+            --env DISCORD_CLIENT_ID="${{ secrets.PROD_DISCORD_CLIENT_ID }}" \
+            --env DISCORD_CLIENT_SECRET="${{ secrets.PROD_DISCORD_CLIENT_SECRET }}" \
+            --env GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}" \
+            --env GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}" \
+            --env GITHUB_CLIENT_ID="${{ secrets.PROD_GITHUB_CLIENT_ID }}" \
+            --env GITHUB_CLIENT_SECRET="${{ secrets.PROD_GITHUB_CLIENT_SECRET }}" \
+            --env BETTER_AUTH_SECRET="${{ secrets.PROD_BETTER_AUTH_SECRET }}" \
+            --env NODE_ENV="production"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -129,7 +140,9 @@ jobs:
           flyctl deploy --remote-only --app concord-ws \
             --dockerfile ws/Dockerfile \
             --config ws/fly.toml \
-            --env-file ws/.env.production
+            --env URL="${PROD_WS_URL}" \
+            --env CORS_ORIGIN="${PROD_WEB_URL}" \
+            --env NODE_ENV="production"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -139,7 +152,10 @@ jobs:
           flyctl deploy --remote-only --app concord-web \
             --dockerfile web/Dockerfile \
             --config web/fly.toml \
-            --env-file web/.env.production
+            --env NEXT_PUBLIC_URL="${PROD_WEB_URL}" \
+            --env NEXT_PUBLIC_API_URL="${PROD_API_URL}" \
+            --env NEXT_PUBLIC_WS_URL="${PROD_WS_URL}" \
+            --env NODE_ENV="production"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
