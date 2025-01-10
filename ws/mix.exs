@@ -14,7 +14,7 @@ defmodule WS.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {WS.Application, []}
+      mod: {Ws.Application, []}
     ]
   end
 
@@ -23,7 +23,8 @@ defmodule WS.MixProject do
       {:phoenix, "~> 1.7.10"},
       {:phoenix_pubsub, "~> 2.1"},
       {:jason, "~> 1.4"},
-      {:cors_plug, "~> 3.0"}
+      {:cors_plug, "~> 3.0"},
+      {:plug_cowboy, "~> 2.6"}
     ]
   end
 end

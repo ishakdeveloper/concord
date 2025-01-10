@@ -7,10 +7,19 @@ defmodule Ws.Application do
 
   @impl true
   def start(_type, _args) do
+    port = Application.get_env(:ws, :port)
+
     children = [
       # Starts a worker by calling: Ws.Worker.start_link(arg)
       # {Ws.Worker, arg}
-      {Plug.Cowboy, scheme: :http, plug: Ws.Router, options: [port: 4001, dispatch: dispatch(), protocol_options: [idle_timeout: :infinity]]},
+      {Plug.Cowboy,
+       scheme: :http,
+       plug: Ws.Router,
+       options: [
+         port: port,
+         dispatch: dispatch(),
+         protocol_options: [idle_timeout: :infinity]
+       ]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
