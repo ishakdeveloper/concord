@@ -32,21 +32,22 @@ jobs:
           version: latest
           run_install: false
 
-      - name: Fix Permissions
+      - name: Setup pnpm cache
+        shell: bash
         run: |
-          sudo chown -R $USER:$USER .
-          sudo mkdir -p /lost+found
-          sudo chown -R $USER:$USER /lost+found
+          mkdir -p /home/runner/.pnpm-store
+          chmod -R 777 /home/runner/.pnpm-store
+          pnpm config set store-dir /home/runner/.pnpm-store
 
       - name: Install Dependencies
         run: |
-          pnpm config set store-dir .pnpm-store
-          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm install --frozen-lockfile --ignore-scripts --no-verify-store-integrity
         env:
           CI: true
           SKIP_LOST_FOUND: true
-          PNPM_HOME: ${{ runner.temp }}/pnpm
+          PNPM_HOME: /home/runner/.local/share/pnpm
           NODE_OPTIONS: '--max_old_space_size=4096'
+          HOME: /home/runner
 
       - name: Run Web Tests
         working-directory: ./web
