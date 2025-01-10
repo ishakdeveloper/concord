@@ -19,8 +19,10 @@
     "deploy:prod": "fly deploy",
     "deploy:prod:web": "fly deploy --config web/fly.toml --app concord-web",
     "deploy:prod:api": "fly deploy --config server/fly.toml --app concord-api",
+    "deploy:prod:ws": "fly deploy --config ws/fly.toml --app concord-ws",
     "deploy:staging:web": "fly deploy --config web/fly.toml --app concord-web-staging",
-    "deploy:staging:api": "fly deploy --config server/fly.toml --app concord-api-staging"
+    "deploy:staging:api": "fly deploy --config server/fly.toml --app concord-api-staging",
+    "deploy:staging:ws": "fly deploy --config ws/fly.toml --app concord-ws-staging"
   },
   "keywords": [],
   "author": "",
