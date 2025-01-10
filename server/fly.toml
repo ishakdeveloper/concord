@@ -26,7 +26,4 @@ primary_region = "lax"
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 1024
-
-[deploy]
-  release_command = "bun run db:push" 
+  memory_mb = 1024 

@@ -128,17 +128,22 @@ jobs:
             BETTER_AUTH_SECRET="${{ secrets.PROD_BETTER_AUTH_SECRET }}" \
             --app concord-api
 
-          # Then deploy
+          # Run database migrations locally first
+          cd server && bun install && bun run db:push
+
+          # Then deploy without release command
           flyctl deploy --remote-only --app concord-api \
             --dockerfile Dockerfile \
             --config fly.toml \
             --env URL="${PROD_API_URL}" \
             --env CORS_ORIGIN="${PROD_WEB_URL}" \
             --env ALLOWED_ORIGINS="${PROD_WEB_URL},${PROD_WS_URL}" \
-            --env NODE_ENV="production"
+            --env NODE_ENV="production" \
+            --skip-release-command
         working-directory: ./server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
 
       # Deploy WebSocket server
       - name: Deploy WebSocket to Production
