@@ -4,14 +4,13 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json .
-COPY bun.lockb .
 COPY tsconfig.json .
 
 # Copy source code
 COPY src/ src/
 
 # Install dependencies
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Build the application
 RUN bun build ./src/index.ts --target bun --outfile server
