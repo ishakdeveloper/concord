@@ -63,7 +63,7 @@ jobs:
             --ignore-scripts \
             --shamefully-hoist \
             --no-verify-store-integrity \
-            --ignore-workspace-root-check
+            --include-workspace-root
         env:
           CI: true
           PNPM_HOME: ${{ github.workspace }}/.pnpm
