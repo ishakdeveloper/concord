@@ -20,10 +20,9 @@ COPY . .
 # Build the Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 
 # Build with specific settings
-RUN NODE_ENV=production pnpm build
+RUN NEXT_TELEMETRY_DISABLED=1 pnpm build
 
 # Production image
 FROM node:21-alpine AS runner

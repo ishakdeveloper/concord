@@ -8,7 +8,8 @@ const nextConfig = {
     domains: ['concord-web.fly.dev', 'staging.concord.fly.dev'],
   },
   experimental: {
-    disableStaticGeneration: false,
+    isrMemoryCacheSize: 0,
+    serverActions: true,
   },
 };
 
