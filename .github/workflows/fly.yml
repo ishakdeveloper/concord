@@ -32,8 +32,34 @@ jobs:
           version: latest
           run_install: false
 
+      # Add debugging steps
+      - name: Debug Permissions
+        run: |
+          echo "Current user: $(whoami)"
+          echo "Current directory: $(pwd)"
+          echo "Listing permissions:"
+          ls -la
+          echo "Node modules permissions:"
+          ls -la /usr/local/lib/node_modules || true
+          echo "Runner temp directory:"
+          ls -la ${{ runner.temp }} || true
+
+      # Fix permissions
+      - name: Fix Permissions
+        run: |
+          sudo mkdir -p /usr/local/lib/node_modules
+          sudo chown -R $(whoami):$(whoami) /usr/local/lib/node_modules
+          sudo chown -R $(whoami):$(whoami) ${{ runner.temp }}
+          sudo chmod -R 755 /usr/local/lib/node_modules
+          sudo chmod -R 755 ${{ runner.temp }}
+
       - name: Install Dependencies
         run: |
+          echo "Setting up pnpm directories..."
+          mkdir -p ${{ runner.temp }}/.pnpm-store
+          mkdir -p ${{ runner.temp }}/.pnpm-cache
+
+          echo "Installing dependencies..."
           pnpm install --frozen-lockfile=false --prefer-offline --ignore-scripts --shamefully-hoist
         env:
           CI: true
