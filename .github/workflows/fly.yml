@@ -171,17 +171,8 @@ jobs:
           # Install pnpm for web deployment
           npm install -g pnpm@8.15.4
 
-          # Copy necessary files to a temporary directory
-          mkdir -p /tmp/web-deploy
-          cp -r web/* /tmp/web-deploy/
-          cp package.json pnpm-workspace.yaml /tmp/web-deploy/
-
-          cd /tmp/web-deploy
-
-          # Install dependencies without frozen lockfile
-          pnpm install --no-frozen-lockfile
-
-          # Deploy web app
+          # Deploy web app directly from web directory
+          cd web
           flyctl deploy --remote-only --app concord-web \
             --dockerfile Dockerfile \
             --config fly.toml \
