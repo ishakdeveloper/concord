@@ -10,8 +10,6 @@ defmodule Ws.Application do
     port = Application.get_env(:ws, :port)
 
     children = [
-      # Starts a worker by calling: Ws.Worker.start_link(arg)
-      # {Ws.Worker, arg}
       {Plug.Cowboy,
        scheme: :http,
        plug: Ws.Router,

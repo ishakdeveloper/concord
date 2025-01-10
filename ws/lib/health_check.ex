@@ -2,11 +2,20 @@ defmodule Ws.HealthCheck do
   @behaviour :cowboy_handler
 
   def init(req, state) do
+    {wall_clock, _} = :erlang.statistics(:wall_clock)
+    memory = :erlang.memory()
+
     response = %{
       status: "healthy",
       timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
-      uptime: :erlang.statistics(:wall_clock) |> elem(0),
-      memory: :erlang.memory()
+      uptime_ms: wall_clock,
+      memory: %{
+        total: memory[:total],
+        processes: memory[:processes],
+        system: memory[:system],
+        atom: memory[:atom],
+        binary: memory[:binary]
+      }
     }
 
     req = :cowboy_req.reply(200,
