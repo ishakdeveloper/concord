@@ -13,8 +13,8 @@ COPY . .
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Build the app
-RUN pnpm build
+# Build the Next.js app
+RUN cd web && pnpm build
 
 # Production image
 FROM node:21-alpine AS runner
@@ -22,10 +22,10 @@ FROM node:21-alpine AS runner
 WORKDIR /app
 
 # Copy necessary files from builder
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/web/.next ./.next
+COPY --from=builder /app/web/public ./public
+COPY --from=builder /app/web/package.json ./package.json
+COPY --from=builder /app/web/next.config.js ./next.config.js
 COPY --from=builder /app/node_modules ./node_modules
 
 # Set environment variables
@@ -35,4 +35,5 @@ ENV HOSTNAME=0.0.0.0
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+# Start Next.js
+CMD ["node_modules/.bin/next", "start"]
