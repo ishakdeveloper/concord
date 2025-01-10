@@ -7,6 +7,9 @@ const nextConfig = {
     unoptimized: true,
     domains: ['concord-web.fly.dev', 'staging.concord.fly.dev'],
   },
+  experimental: {
+    disableStaticGeneration: false,
+  },
 };
 
 module.exports = nextConfig;

@@ -20,7 +20,10 @@ COPY . .
 # Build the Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-RUN pnpm build
+ENV NEXT_SHARP_PATH=/app/node_modules/sharp
+
+# Build with specific settings
+RUN NODE_ENV=production pnpm build
 
 # Production image
 FROM node:21-alpine AS runner
@@ -38,9 +41,9 @@ ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Add healthcheck with increased timeouts
+# Add healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=180s --retries=3 \
-  CMD curl -f "${NEXT_PUBLIC_URL:-http://localhost:8080}/api/health" || exit 1
+  CMD curl -f http://localhost:8080/api/health || exit 1
 
 EXPOSE 8080
 
