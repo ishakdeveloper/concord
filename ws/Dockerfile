@@ -1,35 +1,28 @@
 FROM elixir:1.17-alpine
 
 # Install build dependencies
-RUN apk add --no-cache build-base git
+RUN apk add --no-cache build-base git curl
 
 WORKDIR /app
 
-# Copy mix.exs first
-COPY mix.exs ./
-
-# Create empty mix.lock if it doesn't exist
-RUN touch mix.lock
-
-# Copy config files
+# Copy mix files
+COPY mix.exs mix.lock ./
 COPY config config
 
-# Install hex package manager and rebar
-RUN mix local.hex --force && \
-    mix local.rebar --force
-
 # Install dependencies
-RUN mix deps.get
+RUN mix do deps.get, deps.compile
 
-# Copy application code
-COPY . .
+# Copy source code
+COPY lib lib
 
-# Compile the project
-RUN MIX_ENV=prod mix compile
-
-EXPOSE 8080
+# Compile the release
+RUN mix do compile
 
 ENV PORT=8080
 ENV MIX_ENV=prod
+
+# Add healthcheck using the service URL
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f "${URL:-http://localhost:8080}/health" || exit 1
 
 CMD ["mix", "run", "--no-halt"] 
