@@ -16,6 +16,14 @@ primary_region = "lax"
   min_machines_running = 1
   processes = ["app"]
 
+  # Blue-green deployment settings
+  min_machines_running = 2  # Ensure we have capacity for both versions
+  auto_stop_machines = false  # Prevent automatic scaling down
+  auto_start_machines = true
+  soft_stop = true  # Enable graceful shutdown
+  force_https = true
+  routers = 2  # Multiple routers for high availability
+
   [[http_service.checks]]
     grace_period = "60s"
     interval = "30s"
@@ -31,4 +39,5 @@ primary_region = "lax"
   memory_mb = 1024
 
 [deploy]
+  strategy = "bluegreen"  # Enable blue-green deployment
   release_command = "mix deps.get && mix deps.compile" 

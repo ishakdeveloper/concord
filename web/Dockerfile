@@ -1,8 +1,10 @@
 # Use Node.js base image
 FROM node:21-alpine AS builder
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
+# Install pnpm and curl
+RUN apk add --no-cache curl && \
+    corepack enable && \
+    corepack prepare pnpm@8.15.4 --activate
 
 WORKDIR /app
 
@@ -32,6 +34,10 @@ COPY --from=builder /app/node_modules ./node_modules
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
+
+# Add healthcheck using the service URL
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f "${NEXT_PUBLIC_URL:-http://localhost:8080}/api/health" || exit 1
 
 EXPOSE 8080
 
