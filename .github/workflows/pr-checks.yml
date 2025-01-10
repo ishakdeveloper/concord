@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Setup all environments
+      # Setup environments
       - uses: actions/setup-node@v4
         with:
           node-version: '21'
@@ -26,7 +26,6 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: '8.15.4'
-          run_install: false
 
       - uses: oven-sh/setup-bun@v1
         with:
@@ -37,56 +36,26 @@ jobs:
           otp-version: '26'
           elixir-version: '1.16'
 
-      # Install dependencies and run tests for all services
-      - name: Setup PNPM
-        run: |
-          PNPM_DIR="${{ github.workspace }}/.pnpm"
-          mkdir -p "$PNPM_DIR"/{store,cache,home}
-          echo "PNPM_DIR=$PNPM_DIR" >> $GITHUB_ENV
-
+      # Install dependencies
       - name: Install Web Dependencies
-        run: |
-          pnpm config set store-dir "$PNPM_DIR/store"
-          pnpm config set cache-dir "$PNPM_DIR/cache"
-          pnpm config set home "$PNPM_DIR/home"
-
-          SKIP_LOST_FOUND=true pnpm install \
-            --frozen-lockfile=false \
-            --prefer-offline \
-            --ignore-scripts \
-            --shamefully-hoist
-        env:
-          CI: true
-          NODE_OPTIONS: '--max_old_space_size=4096'
+        run: cd web && pnpm install
 
       - name: Install Server Dependencies
-        working-directory: ./server
-        run: bun install
+        run: cd server && bun install
 
       - name: Install WS Dependencies
-        working-directory: ./ws
         run: |
+          cd ws
           mix local.hex --force
           mix local.rebar --force
           mix deps.get
 
-      # Run all tests
+      # Run tests
       - name: Test Web
-        working-directory: ./web
-        run: pnpm test
+        run: cd web && pnpm test
 
       - name: Test Server
-        working-directory: ./server
-        run: bun test
+        run: cd server && bun test
 
       - name: Test WS
-        working-directory: ./ws
-        run: mix test
-
-  # This job ensures all tests pass before allowing the PR to be merged
-  check-status:
-    needs: test-all
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check Test Status
-        run: echo "All tests passed successfully!"
+        run: cd ws && mix test
