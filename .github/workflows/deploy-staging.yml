@@ -41,6 +41,7 @@ jobs:
             --env NODE_ENV="production" \
             --strategy bluegreen \
             --wait-timeout 300
+            --local-only
         working-directory: ./server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -63,6 +64,7 @@ jobs:
             --env MIX_ENV="prod" \
             --strategy bluegreen \
             --wait-timeout 300
+            --local-only
         working-directory: ./ws
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -87,6 +89,7 @@ jobs:
             --env NODE_ENV="production" \
             --strategy bluegreen \
             --wait-timeout 300
+            --local-only
         working-directory: ./web
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
