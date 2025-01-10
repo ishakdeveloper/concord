@@ -1,54 +1,51 @@
-# Use Node.js base image
-FROM node:21-alpine AS builder
+# syntax = docker/dockerfile:1
 
-# Install pnpm and curl
-RUN apk add --no-cache curl && \
-    corepack enable && \
-    corepack prepare pnpm@8.15.4 --activate
+# Adjust NODE_VERSION as desired
+ARG NODE_VERSION=23.4.0
+FROM node:${NODE_VERSION}-slim AS base
 
+LABEL fly_launch_runtime="Next.js"
+
+# Next.js app lives here
 WORKDIR /app
 
-# Copy workspace files
-COPY package.json pnpm-workspace.yaml ./
-COPY web/package.json ./web/
+# Set production environment
+ENV NODE_ENV="production"
 
-# Install only web dependencies
-WORKDIR /app/web
-RUN NODE_ENV=production pnpm install --prod --frozen-lockfile
 
-# Copy web source
-COPY web/ ./
+# Throw-away build stage to reduce size of final image
+FROM base AS build
 
-# Build with specific settings
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+# Install packages needed to build node modules
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3 dos2unix
 
-# Build the application
-RUN pnpm build
+# Install pnpm
+RUN npm install -g pnpm
 
-# Production image
-FROM node:21-alpine AS runner
+# Install node modules
+COPY package.json pnpm-lock.yaml ./
+RUN chmod 644 package.json
+RUN pnpm install --frozen-lockfile
 
-WORKDIR /app
+# Copy application code
+COPY . .
 
-# Don't run production as root
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# Build application
+RUN cd web && pnpm run build
 
-# Copy necessary files from builder
-COPY --from=builder /app/web/public ./public
-COPY --from=builder /app/web/.next/standalone ./
-COPY --from=builder /app/web/.next/static ./.next/static
+# Remove development dependencies
+RUN pnpm prune --prod
 
-# Set correct permissions
-RUN chown -R nextjs:nodejs /app
 
-USER nextjs
+# Final stage for app image
+FROM base
 
-ENV NODE_ENV=production
-ENV PORT=8080
-ENV HOSTNAME=0.0.0.0
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy built application
+COPY --from=build /app/web/.next/standalone /app
+COPY --from=build /app/web/.next/static /app/.next/static
+COPY --from=build /app/web/public /app/public
 
-EXPOSE 8080
-CMD ["node", "server.js"]
+# Start the server by default, this can be overwritten at runtime
+EXPOSE 3000
+CMD [ "node", "server.js" ]

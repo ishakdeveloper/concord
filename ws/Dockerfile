@@ -1,28 +1,44 @@
-FROM elixir:1.17-alpine
+FROM elixir:1.16-alpine AS builder
 
 # Install build dependencies
-RUN apk add --no-cache build-base git curl
+RUN apk add --no-cache build-base git
 
 WORKDIR /app
 
 # Copy mix files
-COPY mix.exs mix.lock ./
-COPY config config
+COPY ws/mix.exs ws/mix.lock ./
+
+# Install hex and rebar
+RUN mix local.hex --force && \
+    mix local.rebar --force
 
 # Install dependencies
-RUN mix do deps.get, deps.compile
+RUN mix deps.get --only prod && \
+    mix deps.compile
 
-# Copy source code
-COPY lib lib
+# Copy application code
+COPY ws/ ./
 
-# Compile the release
-RUN mix do compile
+# Compile the application
+ENV MIX_ENV=prod
+RUN mix compile && \
+    mix release
 
-ENV PORT=8080
+# Production image
+FROM alpine:3.19
+
+RUN apk add --no-cache libstdc++ ncurses-libs
+
+WORKDIR /app
+
+# Copy the release from the builder
+COPY --from=builder /app/_build/prod/rel/ws ./
+
+ENV PORT=4001
 ENV MIX_ENV=prod
 
-# Add healthcheck using the service URL
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f "${URL:-http://localhost:8080}/health" || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4001/health || exit 1
 
-CMD ["mix", "run", "--no-halt"] 
+EXPOSE 4001
+CMD ["bin/ws", "start"] 

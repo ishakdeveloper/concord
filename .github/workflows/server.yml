@@ -1,0 +1,76 @@
+name: Server CI/CD
+
+on:
+  push:
+    branches: [master, staging]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
+  pull_request:
+    branches: [master, staging, dev]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server.yml'
+
+jobs:
+  test:
+    name: Test Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        working-directory: ./server
+        run: bun install
+
+      - name: Run Tests
+        working-directory: ./server
+        run: bun test
+
+  deploy:
+    name: Deploy Server
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging')
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }}
+    concurrency: ${{ github.ref == 'refs/heads/master' && 'production_server' || 'staging_server' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: |
+          APP_NAME=${{ github.ref == 'refs/heads/master' && 'concord-api' || 'concord-api-staging' }}
+          URL=${{ github.ref == 'refs/heads/master' && 'https://concord-api.fly.dev' || 'https://staging.api.concord.fly.dev' }}
+          WEB_URL=${{ github.ref == 'refs/heads/master' && 'https://concord-web.fly.dev' || 'https://staging.concord.fly.dev' }}
+          WS_URL=${{ github.ref == 'refs/heads/master' && 'wss://concord-ws.fly.dev' || 'wss://staging.ws.concord.fly.dev' }}
+
+          # Set secrets first
+          flyctl secrets set \
+            DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            DISCORD_CLIENT_ID="${{ secrets.DISCORD_CLIENT_ID }}" \
+            DISCORD_CLIENT_SECRET="${{ secrets.DISCORD_CLIENT_SECRET }}" \
+            GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+            GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            GITHUB_CLIENT_ID="${{ secrets.GITHUB_CLIENT_ID }}" \
+            GITHUB_CLIENT_SECRET="${{ secrets.GITHUB_CLIENT_SECRET }}" \
+            --app $APP_NAME
+
+          flyctl deploy --remote-only --app $APP_NAME \
+            --dockerfile Dockerfile \
+            --config fly.toml \
+            --env URL="$URL" \
+            --env CORS_ORIGIN="$WEB_URL" \
+            --env ALLOWED_ORIGINS="$WEB_URL,$WS_URL" \
+            --env NODE_ENV="production" \
+            --strategy bluegreen \
+            --wait-timeout 300
+        working-directory: ./server
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

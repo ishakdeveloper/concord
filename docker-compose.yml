@@ -5,12 +5,26 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+      target: build
     ports:
       - '3000:3000'
     environment:
       - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_TELEMETRY_DISABLED=1
     env_file:
       - web/.env.docker
+    volumes:
+      - ./web:/app/web
+      - ./package.json:/app/package.json
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - web_node_modules:/app/node_modules
+      - web_next_cache:/app/web/.next
+      - ./.husky:/app/.husky
+      - ./.git:/app/.git
+    command: sh -c "cd /app/web && npm install && npm run dev"
     depends_on:
       - server
 
@@ -18,28 +32,40 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+      target: build
     ports:
       - '3001:3001'
     environment:
       - NODE_ENV=development
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
     env_file:
       - server/.env.docker
     volumes:
+      - ./server:/app/server
+      - server_node_modules:/app/node_modules
       - ./uploads:/app/uploads
+    command: bun run dev
     depends_on:
       db:
         condition: service_healthy
 
   ws:
     build:
-      context: ./ws
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ws/Dockerfile
     ports:
       - '4001:4001'
     environment:
       - NODE_ENV=development
+      - PORT=4001
+      - MIX_ENV=dev
     env_file:
       - ws/.env.docker
+    volumes:
+      - ./ws:/app/ws
+      - ws_build:/app/_build
+      - ws_deps:/app/deps
     depends_on:
       - server
 
@@ -62,3 +88,8 @@ services:
 volumes:
   postgres_data:
   uploads:
+  web_node_modules:
+  server_node_modules:
+  web_next_cache:
+  ws_build:
+  ws_deps:

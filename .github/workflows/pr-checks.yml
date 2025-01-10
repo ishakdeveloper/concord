@@ -1,0 +1,92 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [master, staging]
+    paths:
+      - 'web/**'
+      - 'server/**'
+      - 'ws/**'
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+jobs:
+  test-all:
+    name: Test All Services
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup all environments
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: '8.15.4'
+          run_install: false
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: '26'
+          elixir-version: '1.16'
+
+      # Install dependencies and run tests for all services
+      - name: Setup PNPM
+        run: |
+          PNPM_DIR="${{ github.workspace }}/.pnpm"
+          mkdir -p "$PNPM_DIR"/{store,cache,home}
+          echo "PNPM_DIR=$PNPM_DIR" >> $GITHUB_ENV
+
+      - name: Install Web Dependencies
+        run: |
+          pnpm config set store-dir "$PNPM_DIR/store"
+          pnpm config set cache-dir "$PNPM_DIR/cache"
+          pnpm config set home "$PNPM_DIR/home"
+
+          SKIP_LOST_FOUND=true pnpm install \
+            --frozen-lockfile=false \
+            --prefer-offline \
+            --ignore-scripts \
+            --shamefully-hoist
+        env:
+          CI: true
+          NODE_OPTIONS: '--max_old_space_size=4096'
+
+      - name: Install Server Dependencies
+        working-directory: ./server
+        run: bun install
+
+      - name: Install WS Dependencies
+        working-directory: ./ws
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get
+
+      # Run all tests
+      - name: Test Web
+        working-directory: ./web
+        run: pnpm test
+
+      - name: Test Server
+        working-directory: ./server
+        run: bun test
+
+      - name: Test WS
+        working-directory: ./ws
+        run: mix test
+
+  # This job ensures all tests pass before allowing the PR to be merged
+  check-status:
+    needs: test-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Test Status
+        run: echo "All tests passed successfully!"

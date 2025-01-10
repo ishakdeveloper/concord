@@ -1,0 +1,65 @@
+name: Server Staging CI/CD
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server-staging.yml'
+
+jobs:
+  test:
+    name: Test Server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        working-directory: ./server
+        run: bun install
+
+      - name: Run Tests
+        working-directory: ./server
+        run: bun test
+
+  deploy:
+    name: Deploy Server Staging
+    needs: test
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency: staging_server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Staging
+        run: |
+          # Set secrets first
+          flyctl secrets set \
+            DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}" \
+            DISCORD_CLIENT_ID="${{ secrets.STAGING_DISCORD_CLIENT_ID }}" \
+            DISCORD_CLIENT_SECRET="${{ secrets.STAGING_DISCORD_CLIENT_SECRET }}" \
+            GOOGLE_CLIENT_ID="${{ secrets.STAGING_GOOGLE_CLIENT_ID }}" \
+            GOOGLE_CLIENT_SECRET="${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}" \
+            GITHUB_CLIENT_ID="${{ secrets.STAGING_GITHUB_CLIENT_ID }}" \
+            GITHUB_CLIENT_SECRET="${{ secrets.STAGING_GITHUB_CLIENT_SECRET }}" \
+            --app concord-api-staging
+
+          flyctl deploy --remote-only --app concord-api-staging \
+            --dockerfile Dockerfile \
+            --config fly.toml \
+            --env URL="https://staging.api.concord.fly.dev" \
+            --env CORS_ORIGIN="https://staging.concord.fly.dev" \
+            --env ALLOWED_ORIGINS="https://staging.concord.fly.dev,wss://staging.ws.concord.fly.dev" \
+            --env NODE_ENV="production" \
+            --strategy bluegreen \
+            --wait-timeout 300
+        working-directory: ./server
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

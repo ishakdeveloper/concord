@@ -24,6 +24,7 @@
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.6.1",
     "@types/bun": "latest",
     "@types/pg": "^8.11.10",
     "bun-types": "latest",

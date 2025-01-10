@@ -1,0 +1,47 @@
+name: Web Staging CI/CD
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-staging.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+jobs:
+  deploy:
+    name: Deploy Web Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency: staging_web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Wait for other services
+        run: |
+          # Wait for server deployment to complete
+          gh run list --workflow=server-staging.yml --branch=staging --json conclusion --jq '.[0].conclusion' | grep -q "success"
+
+          # Wait for ws deployment to complete
+          gh run list --workflow=ws-staging.yml --branch=staging --json conclusion --jq '.[0].conclusion' | grep -q "success"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to Staging
+        run: |
+          flyctl deploy --remote-only --app concord-web-staging \
+            --dockerfile Dockerfile \
+            --config fly.toml \
+            --env NEXT_PUBLIC_URL="https://staging.concord.fly.dev" \
+            --env NEXT_PUBLIC_API_URL="https://staging.api.concord.fly.dev" \
+            --env NEXT_PUBLIC_WS_URL="wss://staging.ws.concord.fly.dev" \
+            --env NODE_ENV="production" \
+            --strategy bluegreen \
+            --wait-timeout 300
+        working-directory: ./web
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

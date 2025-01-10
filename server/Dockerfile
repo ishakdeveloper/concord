@@ -1,40 +1,45 @@
-FROM oven/bun:1-slim as builder
+# syntax = docker/dockerfile:1
 
+# Adjust BUN_VERSION as desired
+ARG BUN_VERSION=1.1.38
+FROM oven/bun:${BUN_VERSION}-slim AS base
+
+LABEL fly_launch_runtime="Bun"
+
+# Bun app lives here
 WORKDIR /app
 
-# Copy workspace files
-COPY package.json pnpm-workspace.yaml ./
-COPY server/package.json ./server/
+# Set production environment
+ENV NODE_ENV="production"
 
-# Install only server dependencies
-WORKDIR /app/server
-RUN NODE_ENV=production bun install --production --no-git-checks
+# Throw-away build stage to reduce size of final image
+FROM base AS build
 
-# Copy server source
+# Install packages needed to build node modules
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential pkg-config python-is-python3
+
+# Copy application code first
 COPY server/ ./
 
-# Build the application
-RUN bun build src/index.ts --target bun --outdir ./dist
+# Install dependencies
+RUN bun install
 
-# Production image
-FROM oven/bun:1-slim
+# Build application
+RUN bun run build
+
+# Final stage for app image
+FROM base
 
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+# Copy built application
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules ./node_modules
 
-# Copy built files and dependencies
-COPY --from=builder /app/server/dist ./dist
-COPY --from=builder /app/server/node_modules ./node_modules
+# Start the server by default, this can be overwritten at runtime
+EXPOSE 3001
+ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
 
-ENV NODE_ENV=production
-ENV PORT=8080
-ENV HOSTNAME=0.0.0.0
-
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f "${URL:-http://localhost:8080}/health" || exit 1
-
-EXPOSE 8080
-CMD ["bun", "dist/index.js"] 
+CMD [ "bun", "./dist/index.js" ]
