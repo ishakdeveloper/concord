@@ -1,37 +1,22 @@
-FROM oven/bun:1 as builder
-
+FROM oven/bun:1 as base
 WORKDIR /app
-
-# Copy package files
-COPY package.json .
-COPY tsconfig.json .
-
-# Copy source code
-COPY src/ src/
 
 # Install dependencies
-RUN bun install
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
-# Build the application
-RUN bun build ./src/index.ts --target bun --outfile server
+# Copy source code
+COPY . .
 
-# Production image
-FROM oven/bun:1-slim
+# Build if needed
+RUN bun run build
 
-WORKDIR /app
-
-# Copy the built application
-COPY --from=builder /app/server .
-
-# Set environment variables
+# Set production environment
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=8080
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 bunjs
-USER bunjs
+# Expose the correct port
+EXPOSE 8080
 
-EXPOSE 3001
-
-CMD ["./server"] 
+# Start the server
+CMD ["bun", "run", "start"] 

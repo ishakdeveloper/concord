@@ -21,7 +21,7 @@ const validateConfig = () => {
 validateConfig();
 
 export const config = {
-  port: Number(process.env.PORT) || 3001,
+  port: process.env.PORT ? parseInt(process.env.PORT) : 3001,
   url: process.env.URL || 'http://localhost:3001',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   database: {
@@ -31,7 +31,9 @@ export const config = {
   },
   auth: {
     secret: process.env.BETTER_AUTH_SECRET || 'development-secret',
-    trustedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || [],
+    trustedOrigins: (
+      process.env.ALLOWED_ORIGINS || 'http://localhost:3000'
+    ).split(','),
     discord: {
       clientId: process.env.DISCORD_CLIENT_ID || '',
       clientSecret: process.env.DISCORD_CLIENT_SECRET || '',

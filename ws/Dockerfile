@@ -25,8 +25,11 @@ RUN mix deps.get
 COPY . .
 
 # Compile the project
-RUN mix compile
+RUN MIX_ENV=prod mix compile
 
-EXPOSE 4001
+EXPOSE 8080
+
+ENV PORT=8080
+ENV MIX_ENV=prod
 
 CMD ["mix", "run", "--no-halt"] 

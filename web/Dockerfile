@@ -30,10 +30,10 @@ COPY --from=builder /app/node_modules ./node_modules
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
 
-EXPOSE 3000
+EXPOSE 8080
 
 # Start Next.js
-CMD ["node_modules/.bin/next", "start"]
+CMD ["node_modules/.bin/next", "start", "-p", "8080"]
