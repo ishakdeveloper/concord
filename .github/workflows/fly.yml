@@ -119,6 +119,7 @@ jobs:
           flyctl deploy --remote-only --app concord-api \
             --dockerfile Dockerfile \
             --config fly.toml \
+            --build-context .. \
             --env DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}" \
             --env URL="${PROD_API_URL}" \
             --env CORS_ORIGIN="${PROD_WEB_URL}" \
