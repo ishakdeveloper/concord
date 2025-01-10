@@ -25,9 +25,17 @@ COPY --from=builder /app/node_modules ./node_modules
 # Set production environment
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV HOSTNAME=0.0.0.0
+
+# Create uploads directory
+RUN mkdir -p uploads && chmod 777 uploads
 
 # Expose the correct port
 EXPOSE 8080
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=20s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
 
 # Start the server
 CMD ["bun", "dist/index.js"] 

@@ -20,9 +20,10 @@ primary_region = "lax"
     grace_period = "60s"
     interval = "30s"
     method = "GET"
-    timeout = "10s"
+    timeout = "20s"
     path = "/health"
     protocol = "http"
+    tls_skip_verify = true
 
 [[vm]]
   cpu_kind = "shared"

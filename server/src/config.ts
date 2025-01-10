@@ -21,8 +21,9 @@ const validateConfig = () => {
 validateConfig();
 
 export const config = {
-  port: process.env.PORT ? parseInt(process.env.PORT) : 3001,
-  url: process.env.URL || 'http://localhost:3001',
+  port: process.env.PORT ? parseInt(process.env.PORT) : 8080,
+  url: process.env.URL || 'http://localhost:8080',
+  hostname: process.env.HOSTNAME || '0.0.0.0',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   database: {
     url:

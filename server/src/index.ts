@@ -39,14 +39,23 @@ const app = new Elysia()
     })
   )
   .use(swagger())
-  .get('/health', () => ({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  }))
+  .get('/health', () => {
+    return {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+    };
+  })
   .group('/api', (app) => app.get('/hello', () => 'Hello World'))
   .all('/api/auth/*', betterAuthView)
-  .listen(config.port);
+  .listen({
+    port: config.port,
+    hostname: config.hostname,
+  });
 
-console.log(`🦊 Elysia is running at ${config.url}`);
+console.log(
+  `🦊 Elysia is running at ${config.url} on ${config.hostname}:${config.port}`
+);
 
 export type App = typeof app;

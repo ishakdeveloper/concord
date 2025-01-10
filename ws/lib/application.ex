@@ -18,7 +18,8 @@ defmodule Ws.Application do
        options: [
          port: port,
          dispatch: dispatch(),
-         protocol_options: [idle_timeout: :infinity]
+         protocol_options: [idle_timeout: :infinity],
+         transport_options: [num_acceptors: 10]
        ]}
     ]
 
@@ -31,6 +32,7 @@ defmodule Ws.Application do
   defp dispatch do
     [
       {:_, [
+        {"/health", Ws.HealthCheck, []},
         {"/ws", WS.Message.SocketHandler, []},
         {:_, Plug.Cowboy.Handler, {Ws.Router, []}}
       ]}
