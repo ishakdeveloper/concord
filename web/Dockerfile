@@ -8,16 +8,16 @@ RUN apk add --no-cache curl && \
 
 WORKDIR /app
 
-# Copy package files first (only package.json since we don't have lock file)
+# Copy package files first
 COPY package.json ./
 
-# Install dependencies with production flags
+# Install dependencies
 RUN pnpm install --prod
 
 # Copy source files
 COPY . .
 
-# Build the Next.js app with specific environment
+# Build the Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 RUN pnpm build
@@ -44,5 +44,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=180s --retries=3 \
 
 EXPOSE 8080
 
-# Start Next.js with optimized flags
+# Start Next.js
 CMD ["node", "server.js"]
