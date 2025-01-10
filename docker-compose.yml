@@ -52,18 +52,17 @@ services:
 
   ws:
     build:
-      context: .
-      dockerfile: ws/Dockerfile
+      context: ./ws
+      dockerfile: Dockerfile
     ports:
-      - '4001:4001'
+      - '4001:8080'
     environment:
-      - NODE_ENV=development
-      - PORT=4001
+      - PORT=8080
       - MIX_ENV=dev
     env_file:
-      - ws/.env.docker
+      - .env.docker
     volumes:
-      - ./ws:/app/ws
+      - .:/app
       - ws_build:/app/_build
       - ws_deps:/app/deps
     depends_on:

@@ -6,7 +6,7 @@ RUN apk add --no-cache build-base git
 WORKDIR /app
 
 # Copy mix files
-COPY ws/mix.exs ws/mix.lock ./
+COPY mix.exs mix.lock ./
 
 # Install hex and rebar
 RUN mix local.hex --force && \
@@ -17,7 +17,7 @@ RUN mix deps.get --only prod && \
     mix deps.compile
 
 # Copy application code
-COPY ws/ ./
+COPY . .
 
 # Compile the application
 ENV MIX_ENV=prod
@@ -34,11 +34,11 @@ WORKDIR /app
 # Copy the release from the builder
 COPY --from=builder /app/_build/prod/rel/ws ./
 
-ENV PORT=4001
+ENV PORT=8080
 ENV MIX_ENV=prod
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:4001/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
-EXPOSE 4001
+EXPOSE 8080
 CMD ["bin/ws", "start"] 
