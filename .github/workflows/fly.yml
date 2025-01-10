@@ -30,7 +30,6 @@ jobs:
         uses: pnpm/action-setup@v2
         with:
           version: 8.15.4
-          run_install: false
 
       - name: Install Dependencies
         working-directory: ./web
