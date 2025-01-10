@@ -12,7 +12,6 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV="production"
 
-
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
@@ -24,27 +23,25 @@ RUN apt-get update -qq && \
 RUN npm install -g pnpm
 
 # Install node modules
-COPY package.json pnpm-lock.yaml ./
-RUN chmod 644 package.json
-RUN pnpm install --frozen-lockfile
+COPY package.json ./
+RUN pnpm install
 
 # Copy application code
 COPY . .
 
 # Build application
-RUN cd web && pnpm run build
+RUN pnpm run build
 
 # Remove development dependencies
 RUN pnpm prune --prod
-
 
 # Final stage for app image
 FROM base
 
 # Copy built application
-COPY --from=build /app/web/.next/standalone /app
-COPY --from=build /app/web/.next/static /app/.next/static
-COPY --from=build /app/web/public /app/public
+COPY --from=build /app/.next/standalone /app
+COPY --from=build /app/.next/static /app/.next/static
+COPY --from=build /app/public /app/public
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
