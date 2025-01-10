@@ -12,17 +12,16 @@ COPY mix.exs mix.lock ./
 RUN mix local.hex --force && \
     mix local.rebar --force
 
-# Install dependencies
+# Install and compile dependencies
 RUN mix deps.get --only prod && \
     mix deps.compile
 
 # Copy application code
 COPY . .
 
-# Compile the application
+# Compile and release
 ENV MIX_ENV=prod
-RUN mix compile && \
-    mix release
+RUN mix do compile, release
 
 # Production image
 FROM alpine:3.19

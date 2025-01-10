@@ -34,5 +34,4 @@ primary_region = "ams"
 
 [deploy]
   strategy = "bluegreen"
-  release_command = "mix deps.get && mix deps.compile"
   wait_timeout = "300s" 
