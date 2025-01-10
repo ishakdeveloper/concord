@@ -2,7 +2,7 @@ app = "concord-web"
 primary_region = "lax"
 
 [build]
-  dockerfile = "web/Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "3000"

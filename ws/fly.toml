@@ -2,7 +2,7 @@ app = "concord-ws"
 primary_region = "lax"
 
 [build]
-  dockerfile = "ws/Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "4001"
