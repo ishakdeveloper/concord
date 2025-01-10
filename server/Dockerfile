@@ -3,26 +3,24 @@ FROM oven/bun:1 AS build
 
 WORKDIR /app
 
-# Cache packages
-COPY package.json package.json
-COPY pnpm-workspace.yaml pnpm-workspace.yaml
+# Copy root workspace files first
+COPY package.json .
+COPY pnpm-workspace.yaml .
+COPY bun.lockb .
 
-# Create empty lockfile if it doesn't exist
-RUN touch bun.lockb
-
-# Copy package files
-COPY server/package.json ./server/package.json
+# Copy server package files
+COPY package.json server/
+COPY src server/src
+COPY tsconfig.json server/
 
 # Install dependencies
-RUN cd server && bun install --no-save
-
-# Copy source code
-COPY server ./server
+WORKDIR /app/server
+RUN bun install --no-save
 
 ENV NODE_ENV=production
 
 # Build and compile to binary
-RUN cd server && bun build \
+RUN bun build \
     --compile \
     --minify-whitespace \
     --minify-syntax \
@@ -39,7 +37,7 @@ WORKDIR /app
 COPY --from=build /app/server/server ./server
 
 # Copy environment files if needed
-COPY server/.env.* ./
+COPY .env.* ./
 
 ENV NODE_ENV=production
 
