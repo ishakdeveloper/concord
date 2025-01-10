@@ -17,12 +17,12 @@ RUN pnpm install --prod
 # Copy source files
 COPY . .
 
-# Build the Next.js app
+# Build with specific settings
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_SKIP_OPT_ROUTES=true
 
-# Build with specific settings
-RUN NEXT_TELEMETRY_DISABLED=1 pnpm build
+RUN NEXT_TELEMETRY_DISABLED=1 NEXT_SKIP_OPT_ROUTES=true pnpm build
 
 # Production image
 FROM node:21-alpine AS runner

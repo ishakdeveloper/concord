@@ -8,8 +8,13 @@ const nextConfig = {
     domains: ['concord-web.fly.dev', 'staging.concord.fly.dev'],
   },
   experimental: {
-    isrMemoryCacheSize: 0,
     serverActions: true,
+  },
+  reactStrictMode: true,
+  swcMinify: true,
+  staticPageGenerationTimeout: 0,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 };
 
