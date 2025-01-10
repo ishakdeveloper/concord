@@ -32,22 +32,16 @@ jobs:
           version: latest
           run_install: false
 
-      - name: Setup pnpm cache
-        shell: bash
-        run: |
-          mkdir -p /home/runner/.pnpm-store
-          chmod -R 777 /home/runner/.pnpm-store
-          pnpm config set store-dir /home/runner/.pnpm-store
-
       - name: Install Dependencies
         run: |
-          pnpm install --frozen-lockfile --ignore-scripts --no-verify-store-integrity
+          pnpm install --frozen-lockfile=false --prefer-offline --ignore-scripts --shamefully-hoist
         env:
           CI: true
-          SKIP_LOST_FOUND: true
-          PNPM_HOME: /home/runner/.local/share/pnpm
+          PNPM_HOME: ${{ runner.temp }}/.pnpm
           NODE_OPTIONS: '--max_old_space_size=4096'
-          HOME: /home/runner
+          SKIP_LOST_FOUND: '1'
+          STORE_DIR: ${{ runner.temp }}/.pnpm-store
+          PNPM_CACHE_FOLDER: ${{ runner.temp }}/.pnpm-cache
 
       - name: Run Web Tests
         working-directory: ./web
