@@ -29,53 +29,49 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: latest
+          version: '8.15.4'
           run_install: false
 
-      # More detailed debugging
-      - name: Debug Environment
+      # Create isolated environment
+      - name: Setup Environment
         run: |
-          echo "Current user: $(whoami)"
-          echo "User ID: $(id)"
-          echo "Current directory: $(pwd)"
-          echo "Home directory: $HOME"
-          echo "Temp directory: ${{ runner.temp }}"
-          echo "Workspace: ${{ github.workspace }}"
-          echo "Lost+found permissions:"
-          sudo ls -la /lost+found || true
-          echo "Current directory structure:"
-          tree -L 2 || true
-
-      # Create a dedicated directory for pnpm
-      - name: Setup pnpm directory
-        run: |
+          # Create isolated directories
           PNPM_DIR="${{ github.workspace }}/.pnpm"
-          echo "Creating pnpm directory at $PNPM_DIR"
-          mkdir -p "$PNPM_DIR"
-          sudo chown -R $(whoami) "$PNPM_DIR"
+          mkdir -p "$PNPM_DIR"/{store,cache,home}
+
+          # Set permissions
           sudo chmod -R 755 "$PNPM_DIR"
+          sudo chown -R $(whoami) "$PNPM_DIR"
+
+          # Prevent lost+found access
+          sudo chmod -r /lost+found 2>/dev/null || true
+
+          # Export variables
           echo "PNPM_DIR=$PNPM_DIR" >> $GITHUB_ENV
 
       - name: Install Dependencies
         run: |
-          # Set pnpm to use our custom directory
+          # Configure pnpm to use isolated directories
           pnpm config set store-dir "$PNPM_DIR/store"
           pnpm config set cache-dir "$PNPM_DIR/cache"
+          pnpm config set home "$PNPM_DIR/home"
 
-          # Install with detailed logging
-          PNPM_LOGLEVEL=debug pnpm install \
+          # Install with all safeguards
+          SKIP_LOST_FOUND=true PNPM_LOGLEVEL=debug pnpm install \
             --frozen-lockfile=false \
             --prefer-offline \
             --ignore-scripts \
             --shamefully-hoist \
-            --no-verify-store-integrity
+            --no-verify-store-integrity \
+            --ignore-workspace-root-check
         env:
           CI: true
           PNPM_HOME: ${{ github.workspace }}/.pnpm
           NODE_OPTIONS: '--max_old_space_size=4096'
-          SKIP_LOST_FOUND: '1'
           XDG_CACHE_HOME: ${{ github.workspace }}/.cache
           npm_config_cache: ${{ github.workspace }}/.npm
+          SKIP_LOST_FOUND: 'true'
+          HOME: ${{ github.workspace }}/.pnpm/home
 
       - name: Run Web Tests
         working-directory: ./web
