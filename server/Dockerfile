@@ -20,9 +20,6 @@ COPY . .
 # Build the application
 RUN bun run build
 
-# Remove development dependencies
-RUN bun run prune
-
 # Final stage
 FROM base
 
