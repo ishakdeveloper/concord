@@ -116,21 +116,25 @@ jobs:
       # Deploy API first
       - name: Deploy API to Production
         run: |
+          # Set secrets first
+          flyctl secrets set \
+            DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}" \
+            DISCORD_CLIENT_ID="${{ secrets.PROD_DISCORD_CLIENT_ID }}" \
+            DISCORD_CLIENT_SECRET="${{ secrets.PROD_DISCORD_CLIENT_SECRET }}" \
+            GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}" \
+            GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}" \
+            GITHUB_CLIENT_ID="${{ secrets.PROD_GITHUB_CLIENT_ID }}" \
+            GITHUB_CLIENT_SECRET="${{ secrets.PROD_GITHUB_CLIENT_SECRET }}" \
+            BETTER_AUTH_SECRET="${{ secrets.PROD_BETTER_AUTH_SECRET }}" \
+            --app concord-api
+
+          # Then deploy
           flyctl deploy --remote-only --app concord-api \
             --dockerfile Dockerfile \
             --config fly.toml \
-            --build-context .. \
-            --env DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}" \
             --env URL="${PROD_API_URL}" \
             --env CORS_ORIGIN="${PROD_WEB_URL}" \
             --env ALLOWED_ORIGINS="${PROD_WEB_URL},${PROD_WS_URL}" \
-            --env DISCORD_CLIENT_ID="${{ secrets.PROD_DISCORD_CLIENT_ID }}" \
-            --env DISCORD_CLIENT_SECRET="${{ secrets.PROD_DISCORD_CLIENT_SECRET }}" \
-            --env GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}" \
-            --env GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}" \
-            --env GITHUB_CLIENT_ID="${{ secrets.PROD_GITHUB_CLIENT_ID }}" \
-            --env GITHUB_CLIENT_SECRET="${{ secrets.PROD_GITHUB_CLIENT_SECRET }}" \
-            --env BETTER_AUTH_SECRET="${{ secrets.PROD_BETTER_AUTH_SECRET }}" \
             --env NODE_ENV="production"
         working-directory: ./server
         env:
@@ -183,18 +187,26 @@ jobs:
       # Deploy API first
       - name: Deploy API to Staging
         run: |
+          # Set secrets first
+          flyctl secrets set \
+            DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}" \
+            DISCORD_CLIENT_ID="${{ secrets.STAGING_DISCORD_CLIENT_ID }}" \
+            DISCORD_CLIENT_SECRET="${{ secrets.STAGING_DISCORD_CLIENT_SECRET }}" \
+            GOOGLE_CLIENT_ID="${{ secrets.STAGING_GOOGLE_CLIENT_ID }}" \
+            GOOGLE_CLIENT_SECRET="${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}" \
+            GITHUB_CLIENT_ID="${{ secrets.STAGING_GITHUB_CLIENT_ID }}" \
+            GITHUB_CLIENT_SECRET="${{ secrets.STAGING_GITHUB_CLIENT_SECRET }}" \
+            --app concord-api-staging
+
+          # Then deploy
           flyctl deploy --remote-only --app concord-api-staging \
-            --dockerfile server/Dockerfile \
-            --env DATABASE_URL="${{ secrets.STAGING_DATABASE_URL }}" \
+            --dockerfile Dockerfile \
+            --config fly.toml \
             --env URL="${STAGING_API_URL}" \
             --env CORS_ORIGIN="${STAGING_WEB_URL}" \
             --env ALLOWED_ORIGINS="${STAGING_WEB_URL},${STAGING_WS_URL}" \
-            --env DISCORD_CLIENT_ID="${{ secrets.STAGING_DISCORD_CLIENT_ID }}" \
-            --env DISCORD_CLIENT_SECRET="${{ secrets.STAGING_DISCORD_CLIENT_SECRET }}" \
-            --env GOOGLE_CLIENT_ID="${{ secrets.STAGING_GOOGLE_CLIENT_ID }}" \
-            --env GOOGLE_CLIENT_SECRET="${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}" \
-            --env GITHUB_CLIENT_ID="${{ secrets.STAGING_GITHUB_CLIENT_ID }}" \
-            --env GITHUB_CLIENT_SECRET="${{ secrets.STAGING_GITHUB_CLIENT_SECRET }}"
+            --env NODE_ENV="production"
+        working-directory: ./server
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -202,10 +214,12 @@ jobs:
       - name: Deploy WebSocket to Staging
         run: |
           flyctl deploy --remote-only --app concord-ws-staging \
-            --dockerfile ws/Dockerfile \
-            --config ws/fly.toml \
+            --dockerfile Dockerfile \
+            --config fly.toml \
             --env URL="${STAGING_WS_URL}" \
-            --env CORS_ORIGIN="${STAGING_WEB_URL}"
+            --env CORS_ORIGIN="${STAGING_WEB_URL}" \
+            --env NODE_ENV="production"
+        working-directory: ./ws
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
@@ -213,10 +227,12 @@ jobs:
       - name: Deploy Web to Staging
         run: |
           flyctl deploy --remote-only --app concord-web-staging \
-            --dockerfile web/Dockerfile \
+            --dockerfile Dockerfile \
+            --config fly.toml \
             --env NEXT_PUBLIC_URL="${STAGING_WEB_URL}" \
             --env NEXT_PUBLIC_API_URL="${STAGING_API_URL}" \
             --env NEXT_PUBLIC_WS_URL="${STAGING_WS_URL}" \
             --env NODE_ENV="production"
+        working-directory: ./web
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
