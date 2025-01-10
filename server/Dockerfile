@@ -1,45 +1,38 @@
 # syntax = docker/dockerfile:1
 
-# Adjust BUN_VERSION as desired
-ARG BUN_VERSION=1.1.38
-FROM oven/bun:${BUN_VERSION}-slim AS base
-
-LABEL fly_launch_runtime="Bun"
-
-# Bun app lives here
+FROM oven/bun:1.1.38-slim AS base
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
-
-# Throw-away build stage to reduce size of final image
 FROM base AS build
 
-# Install packages needed to build node modules
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential pkg-config python-is-python3
 
-# Copy application code first
-COPY server/ ./
+# Copy package files
+COPY package.json bun.lockb ./
 
 # Install dependencies
-RUN bun install
+RUN bun install --frozen-lockfile
 
-# Build application
+# Copy application code
+COPY . .
+
+# Build the application
 RUN bun run build
 
-# Final stage for app image
+# Remove development dependencies
+RUN bun run prune
+
+# Final stage
 FROM base
 
-WORKDIR /app
-
 # Copy built application
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist /app/dist
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/package.json /app/package.json
 
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3001
-ENV PORT=3001
-ENV HOSTNAME="0.0.0.0"
+ENV PORT=8080
+ENV NODE_ENV=production
 
-CMD [ "bun", "./dist/index.js" ]
+EXPOSE 8080
+CMD ["bun", "dist/index.js"]
