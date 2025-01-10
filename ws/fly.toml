@@ -13,15 +13,9 @@ primary_region = "lax"
   force_https = true
   auto_stop_machines = false
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 2  # Single definition for blue-green
   processes = ["app"]
-
-  # Blue-green deployment settings
-  min_machines_running = 2  # Ensure we have capacity for both versions
-  auto_stop_machines = false  # Prevent automatic scaling down
-  auto_start_machines = true
   soft_stop = true  # Enable graceful shutdown
-  force_https = true
   routers = 2  # Multiple routers for high availability
 
   [[http_service.checks]]
