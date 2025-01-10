@@ -1,48 +1,38 @@
-# Build stage
-FROM oven/bun:1 AS build
+FROM oven/bun:1 as builder
 
 WORKDIR /app
 
-# Copy root workspace files first
-COPY package.json .
-COPY pnpm-workspace.yaml .
-COPY bun.lockb .
+# Copy package files for the server
+COPY server/package.json server/
+COPY server/bun.lockb server/
+COPY server/tsconfig.json server/
 
-# Copy server package files
-COPY package.json server/
-COPY src server/src
-COPY tsconfig.json server/
+# Copy source code
+COPY server/src server/src
 
 # Install dependencies
 WORKDIR /app/server
-RUN bun install --no-save
+RUN bun install --frozen-lockfile
 
-ENV NODE_ENV=production
+# Build the application
+RUN bun build ./src/index.ts --target bun --outfile server
 
-# Build and compile to binary
-RUN bun build \
-    --compile \
-    --minify-whitespace \
-    --minify-syntax \
-    --target bun \
-    --outfile server \
-    ./src/index.ts
-
-# Production stage
-FROM gcr.io/distroless/base
+# Production image
+FROM oven/bun:1-slim
 
 WORKDIR /app
 
-# Copy the compiled binary
-COPY --from=build /app/server/server ./server
+# Copy the built application
+COPY --from=builder /app/server/server .
 
-# Copy environment files if needed
-COPY .env.* ./
-
+# Set environment variables
 ENV NODE_ENV=production
+ENV PORT=3001
 
 # Create a non-root user
-USER nonroot:nonroot
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 bunjs
+USER bunjs
 
 EXPOSE 3001
 
