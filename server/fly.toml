@@ -19,9 +19,9 @@ primary_region = "ams"
   routers = 2
 
   [[http_service.checks]]
-    grace_period = "60s"
+    grace_period = "120s"
     interval = "30s"
-    timeout = "10s"
+    timeout = "20s"
     method = "GET"
     path = "/api/health"
     protocol = "http"
