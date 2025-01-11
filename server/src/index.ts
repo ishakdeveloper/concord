@@ -39,7 +39,7 @@ const app = new Elysia()
     })
   )
   .use(swagger())
-  .get('/health', () => {
+  .get('/api/health', () => {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
