@@ -5,6 +5,9 @@ RUN apk add --no-cache build-base git wget
 
 WORKDIR /app
 
+# Set MIX_ENV to prod for the build stage
+ENV MIX_ENV=prod
+
 # Copy mix files
 COPY mix.exs mix.lock ./
 
