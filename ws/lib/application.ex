@@ -31,7 +31,7 @@ defmodule Ws.Application do
     [
       {:_, [
         {"/health", Ws.HealthCheck, []},
-        {"/ws", WS.Message.SocketHandler, []},
+        {"/ws", Ws.Message.SocketHandler, []},
         {:_, Plug.Cowboy.Handler, {Ws.Router, []}}
       ]}
     ]
