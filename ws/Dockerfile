@@ -21,9 +21,6 @@ COPY config config
 # Copy lib files
 COPY lib lib
 
-# Copy priv files
-COPY priv priv
-
 # Compile the release
 RUN mix do compile, release
 
