@@ -38,7 +38,7 @@ services:
       - PORT=8080
       - NODE_ENV=development
     env_file:
-      - .env.docker
+      - server/.env.docker
     volumes:
       - ./server:/app
       - server_node_modules:/app/node_modules
@@ -56,9 +56,9 @@ services:
       - PORT=8080
       - MIX_ENV=dev
     env_file:
-      - .env.docker
+      - ws/.env.docker
     volumes:
-      - .:/app
+      - ./ws:/app
       - ws_build:/app/_build
       - ws_deps:/app/deps
     depends_on:

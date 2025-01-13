@@ -108,7 +108,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/discord`)
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/discord`)
             }
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
