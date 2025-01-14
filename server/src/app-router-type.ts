@@ -1,4 +1,4 @@
-import { appRouter } from './appRouter';
+import { appRouter } from './modules/manifest';
 
 export type AppRouter = typeof appRouter;
 

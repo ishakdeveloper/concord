@@ -1,6 +1,5 @@
 import { categories } from '../../../database/schema';
 import { and } from 'drizzle-orm';
-
 import { isNull } from 'drizzle-orm';
 import { eq } from 'drizzle-orm';
 import db from '../../../database/db';
@@ -16,9 +15,11 @@ export const getGuildChannels = protectedProcedure
   )
   .query(async ({ input }) => {
     const { guildId } = input;
+
     // Get channels without a category but belonging to this guild
     const uncategorizedChannels = await db.query.channels.findMany({
       where: and(isNull(channels.categoryId), eq(channels.guildId, guildId)),
+      orderBy: (channels, { asc }) => [asc(channels.position)],
     });
 
     // Get categories with their channels for this guild
@@ -27,6 +28,7 @@ export const getGuildChannels = protectedProcedure
       with: {
         channels: {
           where: eq(channels.guildId, guildId),
+          orderBy: (channels, { asc }) => [asc(channels.position)],
         },
       },
     });
