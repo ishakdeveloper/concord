@@ -1,9 +1,8 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import * as trpcExpress from '@trpc/server/adapters/express';
-import { checkTokens } from './utils/createAuthTokens';
-import { sendAuthCookies } from './utils/createAuthTokens';
+import { checkTokens, sendAuthCookies } from './utils/createAuthTokens';
 import superjson from 'superjson';
-import { DbUser } from './database/schema';
+import type { DbUser } from './database/schema';
 
 export const createContext = async ({
   req,

@@ -8,17 +8,13 @@ import { publicProcedure } from '../../trpc';
 import { sendAuthCookies } from '../../utils/createAuthTokens';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { generateDiscriminator } from '../../utils/discriminator';
-import { differenceInYears } from 'date-fns';
 
 // Input validation
 export const registerInput = createInsertSchema(users, {
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(3).max(32),
-  dateOfBirth: z.date().refine((date) => {
-    const age = differenceInYears(new Date(), date);
-    return age >= 13; // Minimum age requirement
-  }, 'You must be at least 13 years old'),
+  dateOfBirth: z.date(),
 }).pick({
   email: true,
   password: true,

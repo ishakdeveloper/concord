@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "dev": "NODE_ENV=development TZ=UTC nodemon --files src/index.ts",
+    "dev": "nodemon --exec \"node --loader ts-node/esm\" src/index.ts",
     "env": "gen-env-types .env -o src/types/env.d.ts -e .",
     "build": "tsc",
     "db:push": "drizzle-kit push",
@@ -27,6 +27,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@concord/common": "workspace:*",
     "@trpc/client": "11.0.0-next-beta.242",
     "@trpc/server": "11.0.0-next-beta.242",
     "@types/passport-discord": "^0.1.14",
@@ -40,6 +41,8 @@
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.13.1",
     "superjson": "^2.2.2",
     "uuid": "^11.0.5",
@@ -53,6 +56,8 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.5",
     "@types/passport": "^1.0.17",
+    "@types/passport-github2": "^1.2.9",
+    "@types/passport-google-oauth20": "^2.0.16",
     "@types/pg": "^8.11.10",
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.30.1",
