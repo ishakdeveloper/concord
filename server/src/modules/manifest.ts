@@ -44,6 +44,9 @@ import { getGuildChannels } from './guilds/channels/getGuildChannels';
 import { createCategory } from './guilds/channels/createCategory';
 import { deleteChannel } from './guilds/channels/deleteChannel';
 import { router } from '../trpc';
+import { sendFriendRequest } from './friends/sendFriendRequest';
+import { getGuildMembersAndRoles } from './guilds/getGuildMembersAndRoles';
+import { addMembers } from './conversations/addMembers';
 
 const userRouter = router({
   me,
@@ -58,6 +61,7 @@ const friendRouter = router({
   getAllFriends,
   getPendingFriendRequests,
   removeFriend,
+  sendFriendRequest,
 });
 
 const guildChannelRouter = router({
@@ -79,6 +83,7 @@ const guildRouter = router({
   getGuildMembers,
   leaveGuild,
   updateGuild,
+  getGuildMembersAndRoles,
   guildChannel: guildChannelRouter,
 });
 
@@ -97,6 +102,7 @@ const conversationRouter = router({
   getConversationMessages,
   getSingleConversation,
   getConversations,
+  addMembers,
 });
 
 const messageRouter = router({

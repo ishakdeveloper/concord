@@ -25,9 +25,9 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
-  const { mutate: login, isPending } = trpc.login.useMutation({
+  const { mutate: login, isPending } = trpc.user.login.useMutation({
     onSuccess: (data) => {
-      utils.me.setData(undefined, { user: data.user });
+      utils.user.me.setData(undefined, { user: data.user });
       console.log(data.user);
 
       router.push('/me');
@@ -124,7 +124,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`)
             }
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/github`)
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/github`)
             }
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">

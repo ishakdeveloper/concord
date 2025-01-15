@@ -14,22 +14,32 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
 
+// Update form schema to match server requirements
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  name: z.string().min(3),
+  name: z.string().min(3).max(32),
+  dateOfBirth: z.date(),
 });
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { mutate: register, isPending } = trpc.register.useMutation({
+  const utils = trpc.useUtils();
+  const { mutate: register, isPending } = trpc.user.register.useMutation({
     onSuccess: () => {
+      utils.user.me.invalidate();
       router.push('/me');
-    },
-    onError: (error) => {
-      console.error('Registration error:', error);
     },
   });
 
@@ -39,11 +49,11 @@ export default function RegisterPage() {
       email: '',
       name: '',
       password: '',
+      dateOfBirth: undefined,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('Submitting values:', values); // Debug log
     register(values);
   }
 
@@ -57,6 +67,20 @@ export default function RegisterPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="email"
@@ -73,12 +97,12 @@ export default function RegisterPage() {
 
             <FormField
               control={form.control}
-              name="name"
+              name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="johndoe" {...field} />
+                    <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -87,20 +111,48 @@ export default function RegisterPage() {
 
             <FormField
               control={form.control}
-              name="password"
+              name="dateOfBirth"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="********" {...field} />
-                  </FormControl>
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date of birth</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={'outline'}
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, 'PPP')
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date('1900-01-01')
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? 'Registering...' : 'Register'}
+              {isPending ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
         </Form>
@@ -121,7 +173,7 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full"
             onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/discord`)
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/discord`)
             }
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -137,7 +189,7 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full"
             onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`)
             }
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -165,7 +217,7 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full"
             onClick={() =>
-              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/github`)
+              (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/github`)
             }
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">

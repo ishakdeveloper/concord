@@ -11,9 +11,12 @@ export const getSingleGuild = protectedProcedure
   .query(async ({ input }) => {
     const { guildId } = input;
 
-    const guild = await db.select().from(guilds).where(eq(guilds.id, guildId));
+    const [guild] = await db
+      .select()
+      .from(guilds)
+      .where(eq(guilds.id, guildId));
 
-    const defaultChannel = await db
+    const [defaultChannel] = await db
       .select()
       .from(channels)
       .where(and(eq(channels.guildId, guildId), eq(channels.name, 'General')));

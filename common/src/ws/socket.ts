@@ -1,4 +1,4 @@
-import type { DbUser } from '@concord/server';
+import { DbUser } from '@concord/server';
 import type { PubSubEvents } from './events';
 import { Opcodes } from './opcodes';
 

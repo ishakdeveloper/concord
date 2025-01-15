@@ -1,6 +1,6 @@
-import { messages } from 'src/database/schema';
+import { messages } from '../../database/schema';
 
-import db from 'src/database/db';
+import db from '../../database/db';
 
 export const sendSystemMessageHandler = async (
   conversationId: string,

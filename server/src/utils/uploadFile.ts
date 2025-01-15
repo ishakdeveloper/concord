@@ -13,7 +13,7 @@ const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 });
 
 export async function uploadFile(
-  file: any,
+  file: File,
   folder: 'avatars' | 'banners'
 ): Promise<string> {
   if (!file) return '';
