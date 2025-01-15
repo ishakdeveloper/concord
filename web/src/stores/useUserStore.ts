@@ -1,22 +1,21 @@
 import { DbUser } from '@concord/server';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-type User = Pick<DbUser, 'id' | 'displayName' | 'name' | 'image'>;
+export type UserState = Pick<
+  DbUser,
+  'id' | 'displayName' | 'name' | 'image' | 'discriminator'
+>;
 
 type UserStore = {
-  user: User | null;
-  setUser: (user: User | null) => void;
+  user: UserState | null;
+  isAuthenticated: boolean;
+  setUser: (user: UserState | null) => void;
+  clearUser: () => void;
 };
 
-export const useUserStore = create<UserStore>()(
-  persist(
-    (set) => ({
-      user: null,
-      setUser: (user) => set({ user }),
-    }),
-    {
-      name: 'UserStore',
-    }
-  )
-);
+export const useUserStore = create<UserStore>()((set) => ({
+  user: null,
+  isAuthenticated: false,
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  clearUser: () => set({ user: null, isAuthenticated: false }),
+}));

@@ -11,11 +11,13 @@ import NextLink from 'next/link';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 import { useChannelStore } from '@/stores/useChannelStore';
-import { RouterOutput, trpc } from '@/lib/trpc';
+import { RouterOutput } from '@/lib/trpc';
 import { useUserStore } from '@/stores/useUserStore';
 import { useChatStore } from '@/stores/useChatStore';
 import LoggedInUserBox from '../LoggedInUserBox';
 import SelectGroupMembers from './SelectGroupMembers';
+import { useConversations } from '@/hooks/useConversations';
+import { usePathname } from 'next/navigation';
 
 const ConversationSidebar = () => {
   const setCurrentChannelId = useChannelStore(
@@ -25,7 +27,7 @@ const ConversationSidebar = () => {
   const currentUser = useUserStore((state) => state.user);
   const setOneOnOnePartner = useChatStore((state) => state.setOneOnOnePartner);
 
-  const { data: conversations } = trpc.conversation.getConversations.useQuery();
+  const { conversations } = useConversations();
 
   const handleConversationClick = (
     conversation: RouterOutput['conversation']['getConversations'][number]
@@ -79,6 +81,8 @@ const ConversationSidebar = () => {
     }
   };
 
+  const pathname = usePathname();
+
   return (
     <div className="w-60 border-r flex flex-col">
       <div className="p-4 flex items-center justify-between border-b">
@@ -91,29 +95,38 @@ const ConversationSidebar = () => {
             onClick={() => setCurrentChannelId(null)}
             className={buttonVariants({
               variant: 'ghost',
-              className: 'w-full justify-start px-2 mb-1',
+              className: cn(
+                'w-full justify-start px-2 mb-1',
+                pathname === '/channels/me' && 'bg-accent'
+              ),
             })}
           >
             <Users className="mr-2 h-4 w-4" />
             Friends
           </NextLink>
           <NextLink
-            href="/channels/me/"
+            href="/channels/me/inbox"
             onClick={() => setCurrentChannelId(null)}
             className={buttonVariants({
               variant: 'ghost',
-              className: 'w-full justify-start px-2 mb-1',
+              className: cn(
+                'w-full justify-start px-2 mb-1',
+                pathname === '/channels/me/inbox' && 'bg-accent'
+              ),
             })}
           >
             <Inbox className="mr-2 h-4 w-4" />
             Inbox
           </NextLink>
           <NextLink
-            href="/channels/me/"
+            href="/channels/me/help"
             onClick={() => setCurrentChannelId(null)}
             className={buttonVariants({
               variant: 'ghost',
-              className: 'w-full justify-start px-2 mb-4',
+              className: cn(
+                'w-full justify-start px-2 mb-4',
+                pathname === '/channels/me/help' && 'bg-accent'
+              ),
             })}
           >
             <HelpCircle className="mr-2 h-4 w-4" />

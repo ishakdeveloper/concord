@@ -4,7 +4,7 @@ import {
   conversationParticipants,
   users as UserTable,
 } from '../../database/schema';
-import { protectedProcedure } from 'src/trpc';
+import { protectedProcedure } from '../../trpc';
 import { z } from 'zod';
 
 export const getConversationMembers = protectedProcedure

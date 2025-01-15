@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc';
 import { useRouter } from 'next/navigation';
+import { useUserStore } from '@/stores/useUserStore';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -25,16 +26,25 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const setUser = useUserStore((state) => state.setUser);
+
   const { mutate: login, isPending } = trpc.user.login.useMutation({
     onSuccess: (data) => {
-      utils.user.me.setData(undefined, { user: data.user });
-      console.log(data.user);
-
-      router.push('/me');
+      const userData = {
+        id: data.user.id,
+        displayName: data.user.displayName,
+        name: data.user.name,
+        image: data.user.image,
+        status: data.user.status,
+        discriminator: data.user.discriminator,
+      };
+      setUser(userData);
+      router.push('/channels/me');
+    },
+    onError: () => {
+      // Handle login error
     },
   });
-
-  const utils = trpc.useUtils();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

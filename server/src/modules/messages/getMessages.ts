@@ -2,34 +2,36 @@ import { z } from 'zod';
 import { protectedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import db from '../../database/db';
-import { messages, channels, conversations } from '../../database/schema';
-import { eq } from 'drizzle-orm';
+import { messages, conversations, channels } from '../../database/schema';
+import { and, desc, eq } from 'drizzle-orm';
 
-export const sendMessage = protectedProcedure
+export const getMessages = protectedProcedure
   .input(
     z
       .object({
-        content: z.string().min(1),
         conversationId: z.string().optional(),
         channelId: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.string().optional(), // For pagination
       })
       .refine((data) => data.conversationId || data.channelId, {
         message: 'Either conversationId or channelId must be provided',
       })
   )
-  .mutation(async ({ input, ctx }) => {
-    const { content, conversationId, channelId } = input;
+  .query(async ({ input, ctx }) => {
+    const { conversationId, channelId, limit, cursor } = input;
     const { user } = ctx;
 
     if (!user) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'You must be logged in to send messages',
+        message: 'You must be logged in to fetch messages',
       });
     }
 
     // Check access rights
     if (conversationId) {
+      // For conversations, check if user is a participant
       const conversation = await db.query.conversations.findFirst({
         where: eq(conversations.id, conversationId),
         with: {
@@ -55,6 +57,7 @@ export const sendMessage = protectedProcedure
         });
       }
     } else if (channelId) {
+      // For guild channels, check if user is a member of the guild
       const channel = await db.query.channels.findFirst({
         where: eq(channels.id, channelId),
         with: {
@@ -83,16 +86,34 @@ export const sendMessage = protectedProcedure
       }
     }
 
-    // Create the message
-    const [newMessage] = await db
-      .insert(messages)
-      .values({
-        content,
-        authorId: user.id,
-        conversationId,
-        channelId,
-      })
-      .returning();
+    // Build query conditions
+    const conditions = conversationId
+      ? eq(messages.conversationId, conversationId)
+      : eq(messages.channelId, channelId!);
 
-    return newMessage;
+    // Add cursor condition if provided
+    const cursorCondition = cursor
+      ? and(conditions, desc(messages.createdAt))
+      : conditions;
+
+    // Fetch messages
+    const messagesList = await db.query.messages.findMany({
+      where: cursorCondition,
+      limit: limit + 1, // Get one extra to check if there are more
+      orderBy: desc(messages.createdAt),
+      with: {
+        author: true,
+      },
+    });
+
+    let nextCursor: string | undefined = undefined;
+    if (messagesList.length > limit) {
+      const nextItem = messagesList.pop();
+      nextCursor = nextItem?.id;
+    }
+
+    return {
+      messages: messagesList,
+      nextCursor,
+    };
   });

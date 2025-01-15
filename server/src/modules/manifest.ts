@@ -47,12 +47,16 @@ import { router } from '../trpc';
 import { sendFriendRequest } from './friends/sendFriendRequest';
 import { getGuildMembersAndRoles } from './guilds/getGuildMembersAndRoles';
 import { addMembers } from './conversations/addMembers';
+import { getUser } from './user/getUser';
+import { getConversationMembers } from './conversations/getConversationMembers';
+import { getMessages } from './messages/getMessages';
 
 const userRouter = router({
   me,
   logout,
   register,
   login,
+  getUser,
 });
 
 const friendRouter = router({
@@ -100,6 +104,7 @@ const conversationRouter = router({
   joinGroup,
   leaveGroup,
   getConversationMessages,
+  getConversationMembers,
   getSingleConversation,
   getConversations,
   addMembers,
@@ -107,6 +112,7 @@ const conversationRouter = router({
 
 const messageRouter = router({
   sendMessage,
+  getMessages,
 });
 
 const roleRouter = router({

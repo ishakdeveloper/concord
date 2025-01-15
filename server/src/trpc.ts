@@ -14,9 +14,14 @@ export const createContext = async ({
   // Check for auth tokens
   if (req.cookies.id && req.cookies.rid) {
     const { id, rid } = req.cookies;
-    const tokens = await checkTokens(id, rid);
-    userId = tokens.userId;
-    user = tokens.user ?? null;
+    const result = await checkTokens(id, rid);
+    userId = result.userId;
+    user = result.user ?? null;
+
+    // Set new tokens if they were rotated
+    if (result.tokens) {
+      sendAuthCookies(res, user!);
+    }
   }
 
   return {
@@ -37,18 +42,22 @@ export const router = t.router;
 export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(async (opts) => {
   const { ctx } = opts;
-  if (!ctx.req.cookies.id && !ctx.req.cookies.rid) {
+  if (!ctx.req.cookies.id || !ctx.req.cookies.rid) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 
   const { id, rid } = ctx.req.cookies;
+  const result = await checkTokens(id, rid);
 
-  const { userId, user = null } = await checkTokens(id, rid);
+  if (!result.user || !result.userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
 
-  ctx.userId = userId;
-  ctx.user = user;
-  if (user) {
-    sendAuthCookies(ctx.res, user);
+  ctx.userId = result.userId;
+  ctx.user = result.user;
+
+  if (result.tokens) {
+    sendAuthCookies(ctx.res, result.user);
   }
 
   return opts.next(opts);

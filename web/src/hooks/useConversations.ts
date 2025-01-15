@@ -10,10 +10,16 @@ export const useConversations = () => {
   const createConversation = trpc.conversation.createConversation.useMutation();
   const addMembers = trpc.conversation.addMembers.useMutation();
   const getConversations = trpc.conversation.getConversations.useQuery();
+
   const getSingleConversation =
-    trpc.conversation.getSingleConversation.useQuery({
-      conversationId: currentChannelId ?? '',
-    });
+    trpc.conversation.getSingleConversation.useQuery(
+      {
+        conversationId: currentChannelId ?? '',
+      },
+      {
+        enabled: !!currentChannelId,
+      }
+    );
 
   return {
     conversations,

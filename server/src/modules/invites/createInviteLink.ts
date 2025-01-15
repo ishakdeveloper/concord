@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 export const createInviteLink = protectedProcedure
   .input(z.object({ guildId: z.string(), maxUses: z.number().optional() }))
-  .mutation(async ({ ctx, input }) => {
+  .query(async ({ ctx, input }) => {
     const { user } = ctx;
     const { guildId, maxUses } = input;
     return await db.transaction(async (tx) => {

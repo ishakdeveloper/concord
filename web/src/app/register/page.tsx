@@ -24,6 +24,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc';
+import { useUserStore } from '@/stores/useUserStore';
 
 // Update form schema to match server requirements
 const formSchema = z.object({
@@ -35,11 +36,24 @@ const formSchema = z.object({
 
 export default function RegisterPage() {
   const router = useRouter();
-  const utils = trpc.useUtils();
+  const setUser = useUserStore((state) => state.setUser);
+
   const { mutate: register, isPending } = trpc.user.register.useMutation({
-    onSuccess: () => {
-      utils.user.me.invalidate();
-      router.push('/me');
+    onSuccess: (data) => {
+      // Pick only the fields we need
+      const userData = {
+        id: data.id,
+        displayName: data.displayName,
+        name: data.name,
+        image: data.image,
+        status: data.status,
+        discriminator: data.discriminator,
+      };
+      setUser(userData);
+      router.push('/channels/me');
+    },
+    onError: () => {
+      // Handle registration error
     },
   });
 

@@ -61,41 +61,54 @@ export const checkTokens = async (
   refreshToken: string
 ) => {
   try {
+    // Try to verify access token first
     const data = <AccessTokenData>(
       verify(accessToken, process.env.ACCESS_TOKEN_SECRET!)
     );
+
+    // Get user to return with valid access token
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, data.userId),
+    });
+
     return {
       userId: data.userId,
+      user,
     };
   } catch (err) {
-    // Access token is invalid or expired, continue to refresh token check
-  }
+    // Access token verification failed, try refresh token
+    if (!refreshToken) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
 
-  if (!refreshToken) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
-  0;
+    try {
+      const refreshData = <RefreshTokenData>(
+        verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!)
+      );
 
-  let data;
-  try {
-    data = <RefreshTokenData>(
-      verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!)
-    );
-  } catch {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, refreshData.userId),
+      });
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, data.userId),
-  });
-  if (!user || user.refreshTokenVersion !== data.refreshTokenVersion) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
+      if (
+        !user ||
+        user.refreshTokenVersion !== refreshData.refreshTokenVersion
+      ) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
 
-  return {
-    userId: data.userId,
-    user,
-  };
+      // Create new tokens without incrementing version
+      const tokens = createAuthTokens(user);
+
+      return {
+        userId: refreshData.userId,
+        user,
+        tokens, // New tokens will be set as cookies
+      };
+    } catch (refreshErr) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+  }
 };
 
 export const sendAuthTokens = (res: Response, user: DbUser) => {

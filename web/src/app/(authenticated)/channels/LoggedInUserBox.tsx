@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useUserStore } from '@/stores/useUserStore';
 import {
@@ -10,41 +10,46 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
-import { UserAvatar, type Status } from '@/components/UserAvatar';
+import { UserAvatar } from '@/components/UserAvatar';
+import { trpc } from '@/lib/trpc';
+import { useRouter } from 'next/navigation';
 
 export default function LoggedInUserBox() {
-  const currentUser = useUserStore((state) => state.user);
-  const [status, setStatus] = useState<Status>('online');
+  const router = useRouter();
+  const { user, clearUser } = useUserStore();
 
-  const handleLogout = () => {};
+  const { mutate: logout } = trpc.user.logout.useMutation({
+    onSuccess: () => {
+      clearUser();
+      router.push('/login');
+    },
+  });
 
   return (
-    <div className="p-4 border-t bg-muted/50 flex items-center gap-2">
-      <UserAvatar
-        src={currentUser?.image}
-        fallback={currentUser?.name?.[0] ?? 'U'}
-        size="sm"
-        status={status}
-      />
+    <div className="p-2.5 border-t bg-muted/50 flex items-center gap-2">
+      <div className="relative h-10 w-10">
+        <UserAvatar
+          src={user?.image}
+          fallback={user?.name?.[0] ?? 'U'}
+          size="sm"
+          className="h-4 w-4"
+        />
+        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 ring-2 ring-background" />
+      </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium truncate">{currentUser?.name}</div>
-        {/* <div className="text-xs text-muted-foreground truncate">
-          #{currentUser?.discriminator}
-        </div> */}
+        <div className="text-sm font-medium truncate">{user?.name}</div>
+        <div className="text-xs text-muted-foreground truncate">
+          #{user?.discriminator}
+        </div>
       </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-7 w-7">
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -65,35 +70,14 @@ export default function LoggedInUserBox() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Set Status</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup
-                value={status}
-                onValueChange={(v) => setStatus(v as Status)}
-              >
-                <DropdownMenuRadioItem value="online">
-                  Online
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="idle">Idle</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dnd">
-                  Do Not Disturb
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="invisible">
-                  Invisible
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link href={`/channels/me/${currentUser?.id}`}>My Profile</Link>
+            <Link href={`/channels/me/${user?.id}`}>My Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/channels/me/settings">User Settings</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>Log Out</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => logout()}>Log Out</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

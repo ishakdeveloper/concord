@@ -1,5 +1,12 @@
-import React from 'react';
+'use client';
 
-export default function Page() {
-  return <div>Page</div>;
+import React from 'react';
+import GuildChatbox from './ChatArea';
+
+export default function ChannelPage() {
+  return (
+    <>
+      <GuildChatbox />
+    </>
+  );
 }

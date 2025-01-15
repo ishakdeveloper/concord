@@ -24,9 +24,9 @@ const statusColors: Record<Status, string> = {
 };
 
 const statusSizes = {
-  sm: 'h-2.5 w-2.5',
-  md: 'h-3 w-3',
-  lg: 'h-3.5 w-3.5',
+  sm: 'h-2 w-2',
+  md: 'h-2.5 w-2.5',
+  lg: 'h-3 w-3',
 };
 
 export function UserAvatar({
@@ -38,9 +38,9 @@ export function UserAvatar({
   ...props
 }: AvatarProps) {
   const sizeClasses = {
-    sm: 'h-8 w-8',
-    md: 'h-10 w-10',
-    lg: 'h-12 w-12',
+    sm: 'h-7 w-7',
+    md: 'h-8 w-8',
+    lg: 'h-10 w-10',
   };
 
   return (
@@ -53,14 +53,14 @@ export function UserAvatar({
           src={src ?? undefined}
           className="h-full w-full rounded-full object-cover"
         />
-        <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-muted">
+        <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-muted text-xs">
           {fallback}
         </AvatarFallback>
       </RadixAvatar>
       {status && (
         <span
           className={cn(
-            'absolute right-0 bottom-0 ring-2 ring-background rounded-full z-10',
+            'absolute right-0 bottom-0 ring-1 ring-background rounded-full z-10',
             statusColors[status],
             statusSizes[size]
           )}
