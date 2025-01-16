@@ -59,3 +59,50 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const sessions = pgTable('sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+
+  // Device info
+  deviceId: text('device_id').notNull(), // Unique identifier for the device
+  deviceName: text('device_name').notNull(), // "Chrome on Windows", "iPhone 12", etc.
+  deviceType: text('device_type').notNull(), // "browser", "mobile", "desktop"
+  clientName: text('client_name'), // "Chrome", "Firefox", "Discord iOS", etc.
+  clientVersion: text('client_version'),
+  osName: text('os_name'), // "Windows", "iOS", "Android", etc.
+  osVersion: text('os_version'),
+
+  // Location info (optional, for showing in devices list)
+  ipAddress: text('ip_address'),
+  location: text('location'), // "San Francisco, US", etc.
+
+  // Session status
+  isActive: boolean('is_active').notNull().default(true),
+  isRevoked: boolean('is_revoked').notNull().default(false),
+
+  // Token management
+  refreshTokenVersion: integer('refresh_token_version').notNull().default(0),
+
+  // Timestamps
+  lastActive: timestamp('last_active').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export type DbSession = InferSelectModel<typeof sessions>;
+
+// Add relations
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  accounts: many(accounts),
+}));

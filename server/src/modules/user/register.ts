@@ -9,6 +9,7 @@ import { sendAuthCookies } from '../../utils/createAuthTokens';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { generateDiscriminator } from '../../utils/discriminator';
 import { eq, and } from 'drizzle-orm';
+import { createAuthTokens } from '../../utils/createAuthTokens';
 
 // Input validation
 export const registerInput = createInsertSchema(users, {
@@ -70,6 +71,16 @@ export const register = publicProcedure
           })
           .returning()
       )[0];
+
+      if (__prod__) {
+        return newUser;
+      } else {
+        const tokens = await createAuthTokens(newUser, ctx.req);
+        if (ctx.req.headers['x-app-platform'] !== 'mobile') {
+          sendAuthCookies(ctx.res, tokens);
+        }
+        return newUser;
+      }
     } catch (e: any) {
       if (e.message.includes('users_email_unique')) {
         throw new TRPCError({
@@ -82,12 +93,5 @@ export const register = publicProcedure
         code: 'INTERNAL_SERVER_ERROR',
         message: e.message,
       });
-    }
-
-    if (__prod__) {
-      return newUser;
-    } else {
-      sendAuthCookies(ctx.res, newUser);
-      return newUser;
     }
   });

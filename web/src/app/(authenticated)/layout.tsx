@@ -1,60 +1,44 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/stores/useUserStore';
-import { trpc } from '@/lib/trpc';
+import { useIsFetching, useIsMutating } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { setUser, clearUser, isAuthenticated } = useUserStore();
-
-  const {
-    data: sessionUser,
-    error,
-    isLoading,
-    isFetched,
-  } = trpc.user.me.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
+  // Only count non-background fetches
+  const isFetching = useIsFetching({
+    predicate: (query) => {
+      // Don't show loading for background refreshes
+      if (
+        query.state.fetchStatus === 'fetching' &&
+        query.state.status === 'success'
+      ) {
+        return false;
+      }
+      return true;
+    },
   });
 
-  useEffect(() => {
-    if (error) {
-      clearUser();
-      router.push('/login');
-    }
-  }, [error, clearUser, router]);
+  // Only count visible mutations
+  const isMutating = useIsMutating({
+    predicate: (mutation) => {
+      return mutation.state.status === 'pending';
+    },
+  });
 
-  useEffect(() => {
-    if (sessionUser) {
-      setUser({
-        id: sessionUser.user.id,
-        displayName: sessionUser.user.displayName,
-        name: sessionUser.user.name,
-        image: sessionUser.user.image,
-        discriminator: sessionUser.user.discriminator,
-      });
-    }
-  }, [sessionUser, setUser]);
+  const isLoading = isFetching > 0 || isMutating > 0;
 
-  // Show loading state while checking auth
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    );
-  }
-
-  // Don't render anything if not authenticated and initial fetch is complete
-  if (!isAuthenticated && isFetched) {
-    return null;
-  }
-
-  return <>{children}</>;
+  return (
+    <div className="relative">
+      {isLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/50">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      )}
+      <div className={isLoading ? 'pointer-events-none' : ''}>{children}</div>
+    </div>
+  );
 }

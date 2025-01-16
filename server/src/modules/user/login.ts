@@ -6,7 +6,10 @@ import { publicProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { __prod__ } from '../../constants/prod';
 import argon2d from 'argon2';
-import { sendAuthTokens } from '../../utils/createAuthTokens';
+import {
+  createAuthTokens,
+  sendAuthCookies,
+} from '../../utils/createAuthTokens';
 
 export const login = publicProcedure
   .input(
@@ -56,7 +59,11 @@ export const login = publicProcedure
       });
     }
 
-    const tokens = sendAuthTokens(ctx.res, user);
+    const tokens = await createAuthTokens(user, ctx.req);
+
+    if (ctx.req.headers['x-app-platform'] !== 'mobile') {
+      sendAuthCookies(ctx.res, tokens);
+    }
 
     return {
       user,

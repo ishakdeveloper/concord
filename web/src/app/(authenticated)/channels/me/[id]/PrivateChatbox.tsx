@@ -18,6 +18,7 @@ const PrivateChatbox = () => {
   const router = useRouter();
   const utils = trpc.useUtils();
   const currentUserId = useUserStore((state) => state.user?.id);
+
   const { getSingleConversation } = useConversations();
   const { data: conversation } = getSingleConversation;
 

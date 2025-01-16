@@ -135,6 +135,26 @@ CREATE TABLE "accounts" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "sessions" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL,
+	"device_id" text NOT NULL,
+	"device_name" text NOT NULL,
+	"device_type" text NOT NULL,
+	"client_name" text,
+	"client_version" text,
+	"os_name" text,
+	"os_version" text,
+	"ip_address" text,
+	"location" text,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"is_revoked" boolean DEFAULT false NOT NULL,
+	"refresh_token_version" integer DEFAULT 0 NOT NULL,
+	"last_active" timestamp DEFAULT now() NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
@@ -157,6 +177,7 @@ CREATE TABLE "users" (
 	"premiumSince" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"date_of_birth" timestamp NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
@@ -182,4 +203,5 @@ ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_roleId_roles_id_
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_memberId_guild_members_id_fk" FOREIGN KEY ("memberId") REFERENCES "public"."guild_members"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "role_assignments" ADD CONSTRAINT "role_assignments_assignedById_users_id_fk" FOREIGN KEY ("assignedById") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "roles" ADD CONSTRAINT "roles_guildId_guilds_id_fk" FOREIGN KEY ("guildId") REFERENCES "public"."guilds"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;

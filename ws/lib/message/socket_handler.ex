@@ -8,7 +8,23 @@ defmodule Ws.Message.SocketHandler do
       origin when is_binary(origin) ->
         cors_origin = Application.get_env(:ws, :cors_origin)
         if origin == cors_origin do
-          {:cowboy_websocket, req, opts}
+          # Get access and refresh tokens from cookies
+          cookies = :cowboy_req.parse_cookies(req)
+          access_token = :proplists.get_value("id", cookies, nil)  # id cookie contains access token
+          refresh_token = :proplists.get_value("rid", cookies, nil) # rid cookie contains refresh token
+
+          # Validate both tokens exist
+          if access_token && refresh_token do
+            # TODO: Add token verification logic here using the tokens
+            # For now just storing tokens in state
+            state = Map.merge(opts, %{
+              access_token: access_token,
+              refresh_token: refresh_token
+            })
+            {:cowboy_websocket, req, state}
+          else
+            {:ok, :cowboy_req.reply(401, req), opts}
+          end
         else
           {:ok, :cowboy_req.reply(403, req), opts}
         end

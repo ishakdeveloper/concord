@@ -11,6 +11,7 @@ export const createContext = async ({
 }: trpcExpress.CreateExpressContextOptions) => {
   let userId = '';
   let user: DbUser | null = null;
+  let sessionId = '';
 
   // Check for auth tokens
   if (req.cookies.id && req.cookies.rid) {
@@ -18,10 +19,11 @@ export const createContext = async ({
     const result = await checkTokens(id, rid);
     userId = result.userId;
     user = result.user ?? null;
+    sessionId = result.sessionId;
 
     // Set new tokens if they were rotated
     if (result.tokens) {
-      sendAuthCookies(res, user!);
+      sendAuthCookies(res, result.tokens);
     }
   }
 
@@ -30,6 +32,7 @@ export const createContext = async ({
     res,
     userId,
     user,
+    sessionId,
   };
 };
 
@@ -57,9 +60,11 @@ export const protectedProcedure = t.procedure.use(async (opts) => {
 
   ctx.userId = result.userId;
   ctx.user = result.user;
+  ctx.sessionId = result.sessionId;
 
+  // Only set cookies if tokens were rotated
   if (result.tokens) {
-    sendAuthCookies(ctx.res, result.user);
+    sendAuthCookies(ctx.res, result.tokens);
   }
 
   return opts.next(opts);

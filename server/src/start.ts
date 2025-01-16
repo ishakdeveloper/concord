@@ -5,6 +5,7 @@ import { DbUser } from './database/schema';
 import { app } from './appRouter';
 import path from 'path';
 import express from 'express';
+import { createAuthTokens } from './utils/createAuthTokens';
 
 export const startServer = async () => {
   app.use(passport.initialize());
@@ -21,8 +22,13 @@ export const startServer = async () => {
       session: false,
       failureRedirect: '/login',
     }),
-    (req, res) => {
-      sendAuthCookies(res, req.user as DbUser);
+    async (req, res) => {
+      if (!req.user) {
+        return res.redirect('/login?error=auth-failed');
+      }
+
+      const tokens = await createAuthTokens(req.user as DbUser, req);
+      sendAuthCookies(res, tokens);
       res.redirect(`${process.env.FRONTEND_URL}/channels/me`);
     }
   );
@@ -41,8 +47,15 @@ export const startServer = async () => {
       session: false,
       failureRedirect: '/login',
     }),
-    (req, res) => {
-      sendAuthCookies(res, req.user as DbUser);
+    async (req, res) => {
+      if (!req.user) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/login?error=auth-failed`
+        );
+      }
+
+      const tokens = await createAuthTokens(req.user as DbUser, req);
+      sendAuthCookies(res, tokens);
       res.redirect(`${process.env.FRONTEND_URL}/channels/me`);
     }
   );
@@ -61,8 +74,15 @@ export const startServer = async () => {
       session: false,
       failureRedirect: '/login',
     }),
-    (req, res) => {
-      sendAuthCookies(res, req.user as DbUser);
+    async (req, res) => {
+      if (!req.user) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/login?error=auth-failed`
+        );
+      }
+
+      const tokens = await createAuthTokens(req.user as DbUser, req);
+      sendAuthCookies(res, tokens);
       res.redirect(`${process.env.FRONTEND_URL}/channels/me`);
     }
   );

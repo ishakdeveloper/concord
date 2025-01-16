@@ -53,6 +53,9 @@ import { getMessages } from './messages/getMessages';
 import { forgotPassword } from './user/forgotPassword';
 import { setNewPassword } from './user/setNewPassword';
 import { confirmEmail } from './user/confirmEmail';
+import { revokeSingleSession } from './sessions/revokeSession';
+import { revokeAllSessions } from './sessions/revokeAllSessions';
+import { getActiveSessions } from './sessions/getActiveSessions';
 
 const userRouter = router({
   me,
@@ -63,6 +66,12 @@ const userRouter = router({
   forgotPassword,
   setNewPassword,
   confirmEmail,
+});
+
+const sessionRouter = router({
+  revokeSingleSession,
+  revokeAllSessions,
+  getActiveSessions,
 });
 
 const friendRouter = router({
@@ -138,6 +147,7 @@ const notificationRouter = router({
 
 export const appRouter = router({
   user: userRouter,
+  session: sessionRouter,
   friend: friendRouter,
   guild: guildRouter,
   invite: inviteRouter,

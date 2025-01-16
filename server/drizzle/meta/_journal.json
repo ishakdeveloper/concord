@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1736785513898,
-      "tag": "0000_skinny_nick_fury",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1736837586497,
-      "tag": "0001_good_morgan_stark",
+      "when": 1737059076685,
+      "tag": "0000_empty_microchip",
       "breakpoints": true
     }
   ]
