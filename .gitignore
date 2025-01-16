@@ -1,9 +1,141 @@
 # Dependencies
 node_modules
+.pnp
+.pnp.js
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Environment
 .env*
 !.env.example
 !.env.docker
+
+# Build outputs
 dist
 .next
+build
+out
+
+# TypeScript
 *.tsbuildinfo
-.eslintcache 
+next-env.d.ts
+
+# Cache and logs
+.eslintcache
+.cache
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE and Editor files
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+
+# Debug
+.debug
+
+# Redis
+dump.rdb
+*.rdb
+
+# Database
+/drizzle
+*.sqlite
+*.sqlite3
+/migrations/*.js
+
+# Express/Node specific
+.clinic/
+.node_repl_history
+.npm
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+*.heapsnapshot
+*.cpuprofile
+process.json
+.pm2/
+
+# Temp files
+*.tmp
+*~
+/tmp
+.temp
+.tmp
+
+# React Native & Expo
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# macOS
+.DS_Store
+
+# Temporary files created by Metro
+.metro-health-check*
+
+# Android
+android/**/build/
+android/app/debug
+android/app/release
+android/**/.gradle
+android/**/.idea
+android/**/*.iml
+android/**/local.properties
+
+# iOS
+ios/build/
+ios/Pods/
+ios/**/*.mode1v3
+ios/**/*.mode2v3
+ios/**/*.moved-aside
+ios/**/*.pbxuser
+ios/**/*.perspectivev3
+ios/**/*sync/
+ios/**/.sconsign.dblite
+ios/**/.tags*
+ios/**/.vagrant/
+ios/**/DerivedData/
+ios/**/Icon?
+ios/**/Pods/
+ios/**/.symlinks/
+ios/**/profile
+ios/**/xcuserdata
+ios/.generated/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.* 
