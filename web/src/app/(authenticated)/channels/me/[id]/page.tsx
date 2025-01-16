@@ -1,16 +1,10 @@
 import React from 'react';
+import PrivateChatbox from './PrivateChatbox';
 
-export default async function PrivateChatPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const slug = (await params).id;
-
+export default async function PrivateChatPage() {
   return (
     <div className="flex w-full">
-      {slug}
-      {/* <PrivateChatbox slug={slug} /> */}
+      <PrivateChatbox />
       {/* <UserProfile /> */}
     </div>
   );

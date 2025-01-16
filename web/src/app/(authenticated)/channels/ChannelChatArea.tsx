@@ -32,8 +32,12 @@ export const ChannelChatArea = ({
   const [message, setMessage] = useState('');
   const [typingUsers, setTypingUsers] = useState<{ [key: string]: string }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,7 +46,6 @@ export const ChannelChatArea = ({
 
     await onSendMessage(message);
     setMessage('');
-
     scrollToBottom();
   };
 
@@ -59,21 +62,23 @@ export const ChannelChatArea = ({
   };
 
   return (
-    <div className="flex flex-grow relative">
+    <div className="flex flex-grow relative h-full">
       <div className="flex-grow flex flex-col">
         {header}
-        <ScrollArea className="flex-grow p-4">
-          <div className="flex flex-col-reverse">
-            {messages?.map((message) => (
-              <MessageItem
-                key={message.id}
-                message={message}
-                currentUser={currentUser as UserState}
-                showUserProfile={showUserProfile}
-              />
-            ))}
+        <ScrollArea ref={scrollAreaRef} className="flex-grow p-4 h-full">
+          <div className="flex flex-col min-h-full justify-end">
+            <div>
+              {messages?.map((message) => (
+                <MessageItem
+                  key={message.id}
+                  message={message}
+                  currentUser={currentUser as UserState}
+                  showUserProfile={showUserProfile}
+                />
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
           </div>
-          <div ref={messagesEndRef} />
         </ScrollArea>
         <div className="p-4 border-t">
           {Object.keys(typingUsers).length > 0 && (

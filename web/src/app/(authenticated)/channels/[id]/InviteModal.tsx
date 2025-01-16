@@ -39,7 +39,7 @@ export const InvitePeopleModal = ({
 
   useEffect(() => {
     if (typeof window !== 'undefined' && invite) {
-      setInviteUrl(`${window.location.origin}/invite/${invite}`);
+      setInviteUrl(`${window.location.origin}/invite/${invite.inviteCode}`);
     }
   }, [invite]);
 

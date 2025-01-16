@@ -28,6 +28,7 @@
   "license": "ISC",
   "dependencies": {
     "@concord/common": "workspace:*",
+    "@react-email/components": "^0.0.32",
     "@trpc/client": "11.0.0-next-beta.242",
     "@trpc/server": "11.0.0-next-beta.242",
     "@types/passport-discord": "^0.1.14",
@@ -38,12 +39,15 @@
     "dotenv-safe": "^9.1.0",
     "drizzle-orm": "^0.38.3",
     "drizzle-zod": "^0.6.1",
+    "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.13.1",
+    "react-email": "^3.0.6",
+    "resend": "^4.1.1",
     "superjson": "^2.2.2",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"

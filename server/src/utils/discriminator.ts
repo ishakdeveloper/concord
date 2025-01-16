@@ -10,13 +10,17 @@ export async function generateDiscriminator(name: string): Promise<string> {
     .from(users)
     .where(eq(users.name, name));
 
-  const usedSet = new Set(existingDiscriminators.map((d) => d.discriminator));
+  // Convert discriminators to numbers for easier comparison
+  const usedNumbers = new Set(
+    existingDiscriminators
+      .map((d) => parseInt(d.discriminator))
+      .filter((n) => !isNaN(n))
+  );
 
   // Try sequential generation first (0001-9999)
-  for (let i = 1; i < 10000; i++) {
-    const discriminator = i.toString().padStart(4, '0');
-    if (!usedSet.has(discriminator)) {
-      return discriminator;
+  for (let i = 1; i <= 9999; i++) {
+    if (!usedNumbers.has(i)) {
+      return i.toString().padStart(4, '0');
     }
   }
 

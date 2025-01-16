@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useRouter } from 'next/navigation';
 
 const createGuildSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
@@ -40,11 +41,14 @@ export function CreateGuildModal() {
   } = useForm<CreateGuildForm>({
     resolver: zodResolver(createGuildSchema),
   });
+  const router = useRouter();
   const utils = trpc.useUtils();
   const createGuildMutation = trpc.guild.createGuild.useMutation({
-    onSuccess: () => {
+    onSuccess: (guild) => {
       setOpen(false);
       utils.guild.getAllGuilds.invalidate();
+
+      router.push(`/channels/${guild.guild.id}/${guild.defaultChannel.id}`);
     },
   });
 

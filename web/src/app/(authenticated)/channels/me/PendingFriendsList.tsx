@@ -1,5 +1,5 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { UserAvatar } from '@/components/UserAvatar';
 import { RouterOutput } from '@/lib/trpc';
 
 interface PendingFriendsListProps {
@@ -25,9 +25,12 @@ export const PendingFriendsList = ({
           key={request.id}
           className="flex items-center mb-4 p-2 hover:bg-accent rounded-md"
         >
-          <Avatar className="h-10 w-10 mr-3">
-            <AvatarFallback>{request.requester.name}</AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            src={request.requester.image}
+            fallback={request.requester.name ?? ''}
+            size="md"
+            className="mr-3"
+          />
           <div className="flex-grow">
             <div className="font-semibold">{request.requester.name}</div>
             <div className="text-sm text-muted-foreground">

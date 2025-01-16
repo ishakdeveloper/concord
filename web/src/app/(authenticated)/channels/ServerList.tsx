@@ -1,7 +1,6 @@
 'use client';
 
-import { Bell, BellOff, Link, LogOut } from 'lucide-react';
-import { Home } from 'lucide-react';
+import { Home, Bell, BellOff, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,23 +19,60 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { Separator } from '@/components/ui/separator';
+import { useRouter } from 'next/navigation';
+import { useGuildStore } from '@/stores/useGuildStore';
+import { useConversationStore } from '@/stores/useConversationStore';
+import { useChannelStore } from '@/stores/useChannelStore';
+import NextLink from 'next/link';
 
 const ServerList = () => {
   const { data: guilds, isLoading } = trpc.guild.getAllGuilds.useQuery();
+  const router = useRouter();
+
+  const setCurrentGuildId = useGuildStore((state) => state.setCurrentGuildId);
+  const currentGuildId = useGuildStore((state) => state.currentGuildId);
+  const setCurrentChannelId = useChannelStore(
+    (state) => state.setCurrentChannelId
+  );
+  const currentConversationId = useConversationStore(
+    (state) => state.currentConversationId
+  );
+  const handleGuildClick = (guildId: string, defaultChannelId: string) => {
+    if (guildId === currentGuildId) {
+      return;
+    }
+
+    setCurrentGuildId(guildId);
+    setCurrentChannelId(defaultChannelId);
+    router.push(`/channels/${guildId}/${defaultChannelId}`);
+  };
 
   return (
     <div className="w-20 border-r flex flex-col items-center py-4 space-y-4">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link href={`/channels/me/`}>
+            <NextLink
+              href={`/channels/me${currentConversationId ? `/${currentConversationId}` : ''}`}
+              onClick={() => {
+                if (currentGuildId) {
+                  // socket?.sendMessage({
+                  //   op: "channel_leave",
+                  //   d: {
+                  //     guild_id: currentGuildId,
+                  //   },
+                  // });
+                  setCurrentGuildId(null);
+                }
+              }}
+            >
               <Button
                 variant="secondary"
                 className="w-12 h-12 rounded-2xl p-0 bg-primary/10 hover:bg-primary/20"
               >
                 <Home className="h-5 w-5" />
               </Button>
-            </Link>
+            </NextLink>
           </TooltipTrigger>
           <TooltipContent side="right">
             <p>Home</p>
@@ -54,6 +90,12 @@ const ServerList = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      onClick={() =>
+                        handleGuildClick(
+                          guild.guilds.id,
+                          guild.guilds.defaultChannelId ?? ''
+                        )
+                      }
                       variant="ghost"
                       className="w-12 h-12 rounded-[24px] p-0 overflow-hidden transition-all duration-200 hover:rounded-[16px]"
                     >

@@ -6,6 +6,7 @@ import { protectedProcedure } from '../../trpc';
 import db from '../../database/db';
 import { uploadFile } from '../../utils/uploadFile';
 import { eq } from 'drizzle-orm';
+import { cacheUtils } from '../../utils/cacheUtils';
 
 // Create input schema based on users table, excluding read-only fields
 const updateMeInput = createInsertSchema(users, {
@@ -74,6 +75,8 @@ export const updateMe = protectedProcedure
           message: 'User not found',
         });
       }
+
+      await cacheUtils.clearUserCache(ctx.userId);
 
       return updatedUser;
     } catch (error: any) {

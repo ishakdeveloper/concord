@@ -3,6 +3,7 @@ import * as trpcExpress from '@trpc/server/adapters/express';
 import { checkTokens, sendAuthCookies } from './utils/createAuthTokens';
 import superjson from 'superjson';
 import type { DbUser } from './database/schema';
+import { CacheOptions, createCacheMiddleware } from './middleware/cache';
 
 export const createContext = async ({
   req,
@@ -39,6 +40,7 @@ export const t = initTRPC.context<Context>().create({
 });
 
 export const router = t.router;
+export const middleware = t.middleware;
 export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(async (opts) => {
   const { ctx } = opts;
@@ -62,3 +64,10 @@ export const protectedProcedure = t.procedure.use(async (opts) => {
 
   return opts.next(opts);
 });
+
+// Helper for creating cached procedures
+export const createCachedProcedure = (options: CacheOptions = {}) => {
+  return protectedProcedure.use(
+    createCacheMiddleware({ ...options, protected: true })
+  );
+};

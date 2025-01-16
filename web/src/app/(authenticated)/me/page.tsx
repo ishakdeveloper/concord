@@ -24,7 +24,7 @@ export default function ProfilePage() {
     <div className="container mx-auto py-10">
       <Card>
         <CardHeader className="relative">
-          {data?.user.banner && (
+          {data?.user?.banner && (
             <div className="absolute inset-0 h-32 w-full overflow-hidden">
               <Image
                 src={data.user.banner}
@@ -35,30 +35,31 @@ export default function ProfilePage() {
             </div>
           )}
           <div className="relative z-10 flex items-center gap-4">
-            {data?.user.image ? (
+            {data?.user?.image ? (
               <Image
                 src={data.user.image}
                 alt="Profile"
                 width={96}
                 height={96}
                 className="rounded-full border-4 border-white object-cover shadow-lg"
+                unoptimized
               />
             ) : (
               <div className="h-24 w-24 rounded-full bg-gray-200" />
             )}
             <div>
               <CardTitle className="flex items-center gap-2">
-                {data?.user.displayName || data?.user.name}
+                {data?.user?.displayName || data?.user?.name}
                 <span className="text-sm text-gray-500">
-                  #{data?.user.discriminator}
+                  #{data?.user?.discriminator}
                 </span>
               </CardTitle>
-              <CardDescription>{data?.user.customStatus}</CardDescription>
+              <CardDescription>{data?.user?.customStatus}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="mt-4 space-y-6">
-          {data?.user.bio && (
+          {data?.user?.bio && (
             <div>
               <h3 className="mb-2 text-lg font-semibold">About Me</h3>
               <p className="text-gray-600">{data.user.bio}</p>
@@ -73,16 +74,16 @@ export default function ProfilePage() {
                   <p className="text-sm font-medium text-gray-500">
                     Display Name
                   </p>
-                  <p className="text-lg">{data?.user.displayName}</p>
+                  <p className="text-lg">{data?.user?.displayName}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-lg">{data?.user.email}</p>
+                  <p className="text-lg">{data?.user?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Pronouns</p>
                   <p className="text-lg">
-                    {data?.user.pronouns || 'Not specified'}
+                    {data?.user?.pronouns || 'Not specified'}
                   </p>
                 </div>
                 <div>
@@ -90,7 +91,7 @@ export default function ProfilePage() {
                     Date of Birth
                   </p>
                   <p className="text-lg">
-                    {data?.user.dateOfBirth
+                    {data?.user?.dateOfBirth
                       ? new Date(data.user.dateOfBirth).toLocaleDateString()
                       : 'Not specified'}
                   </p>
@@ -105,14 +106,14 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Status</p>
-                  <p className="text-lg capitalize">{data?.user.status}</p>
+                  <p className="text-lg capitalize">{data?.user?.status}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">
                     Current Activity
                   </p>
                   <p className="text-lg">
-                    {data?.user.currentActivity || 'None'}
+                    {data?.user?.currentActivity || 'None'}
                   </p>
                 </div>
                 <div>
@@ -120,10 +121,10 @@ export default function ProfilePage() {
                     Direct Messages
                   </p>
                   <p className="text-lg">
-                    {data?.user.enableDM ? 'Enabled' : 'Disabled'}
+                    {data?.user?.enableDM ? 'Enabled' : 'Disabled'}
                   </p>
                 </div>
-                {data?.user.accentColor && (
+                {data?.user?.accentColor && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">
                       Accent Color
@@ -146,7 +147,7 @@ export default function ProfilePage() {
                   Member since
                 </p>
                 <p className="text-lg">
-                  {data?.user.createdAt
+                  {data?.user?.createdAt
                     ? new Date(data.user.createdAt).toLocaleDateString()
                     : 'N/A'}
                 </p>
@@ -154,12 +155,12 @@ export default function ProfilePage() {
               <div>
                 <p className="text-sm font-medium text-gray-500">Last Online</p>
                 <p className="text-lg">
-                  {data?.user.lastOnline
+                  {data?.user?.lastOnline
                     ? new Date(data.user.lastOnline).toLocaleString()
                     : 'N/A'}
                 </p>
               </div>
-              {data?.user.premiumSince && (
+              {data?.user?.premiumSince && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">
                     Premium Member Since

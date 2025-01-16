@@ -13,6 +13,8 @@ import { Hash } from 'lucide-react';
 import { useGuildStore } from '@/stores/useGuildStore';
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useRouter } from 'next/navigation';
+import { useChannelStore } from '@/stores/useChannelStore';
 interface CreateChannelModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,13 +29,22 @@ export const CreateChannelModal = ({
   categoryName,
 }: CreateChannelModalProps) => {
   const currentGuildId = useGuildStore((state) => state.currentGuildId);
+  const setCurrentChannelId = useChannelStore(
+    (state) => state.setCurrentChannelId
+  );
+
   const [channelName, setChannelName] = useState('');
   const utils = trpc.useUtils();
+  const router = useRouter();
 
   const { mutate: createChannel } =
     trpc.guild.guildChannel.createChannel.useMutation({
-      onSuccess: () => {
-        utils.guild.getSingleGuild.invalidate();
+      onSuccess: (newChannel) => {
+        utils.guild.guildChannel.getGuildChannels.invalidate();
+
+        setCurrentChannelId(newChannel.id);
+
+        router.push(`/channels/${currentGuildId}/${newChannel.id}`);
         onClose();
         setChannelName('');
       },

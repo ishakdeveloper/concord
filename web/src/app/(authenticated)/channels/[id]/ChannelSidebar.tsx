@@ -14,6 +14,7 @@ import { ChannelSidebarContextMenu } from './ChannelSidebarContextMenu';
 import { CreateCategoryModal } from './CreateCategoryModal';
 import { InvitePeopleModal } from './InviteModal';
 import { CategoryList } from './CategoryList';
+import LoggedInUserBox from '../LoggedInUserBox';
 
 const ChannelSidebar = () => {
   const currentGuildId = useGuildStore((state) => state.currentGuildId);
@@ -36,6 +37,8 @@ const ChannelSidebar = () => {
             <CategoryList />
           </div>
         </ScrollArea>
+
+        <LoggedInUserBox />
 
         <CreateChannelModal
           isOpen={isChannelModalOpen}

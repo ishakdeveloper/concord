@@ -1,6 +1,5 @@
 'use client';
 
-import { AvatarFallback } from '@/components/ui/avatar';
 import { buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,7 +8,6 @@ import React from 'react';
 import NextLink from 'next/link';
 // import SelectGroupMembers from './SelectGroupMembers';
 import { cn } from '@/lib/utils';
-import { Avatar } from '@/components/ui/avatar';
 import { useChannelStore } from '@/stores/useChannelStore';
 import { RouterOutput } from '@/lib/trpc';
 import { useUserStore } from '@/stores/useUserStore';
@@ -17,7 +15,8 @@ import { useChatStore } from '@/stores/useChatStore';
 import LoggedInUserBox from '../LoggedInUserBox';
 import SelectGroupMembers from './SelectGroupMembers';
 import { useConversations } from '@/hooks/useConversations';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const ConversationSidebar = () => {
   const setCurrentChannelId = useChannelStore(
@@ -28,7 +27,7 @@ const ConversationSidebar = () => {
   const setOneOnOnePartner = useChatStore((state) => state.setOneOnOnePartner);
 
   const { conversations } = useConversations();
-
+  const router = useRouter();
   const handleConversationClick = (
     conversation: RouterOutput['conversation']['getConversations'][number]
   ) => {
@@ -45,6 +44,8 @@ const ConversationSidebar = () => {
     }
 
     setCurrentChannelId(conversation.id);
+
+    router.push(`/channels/me/${conversation.id}`);
   };
 
   const getConversationName = (
@@ -63,23 +64,23 @@ const ConversationSidebar = () => {
     }
   };
 
-  const getAvatarText = (
-    conversation: RouterOutput['conversation']['getConversations'][number]
-  ) => {
-    if (conversation.isGroup) {
-      const validParticipants = conversation.participants
-        .filter((p) => p.user?.name)
-        .slice(0, 2);
-      return (
-        validParticipants.map((p) => p.user?.name?.[0] || 'G').join('') || 'G'
-      );
-    } else {
-      const otherParticipant = conversation.participants.find(
-        (p) => p.user?.id !== currentUser?.id
-      );
-      return otherParticipant?.user?.name?.[0] || '?';
-    }
-  };
+  // const getAvatarText = (
+  //   conversation: RouterOutput['conversation']['getConversations'][number]
+  // ) => {
+  //   if (conversation.isGroup) {
+  //     const validParticipants = conversation.participants
+  //       .filter((p) => p.user?.name)
+  //       .slice(0, 2);
+  //     return (
+  //       validParticipants.map((p) => p.user?.name?.[0] || 'G').join('') || 'G'
+  //     );
+  //   } else {
+  //     const otherParticipant = conversation.participants.find(
+  //       (p) => p.user?.id !== currentUser?.id
+  //     );
+  //     return otherParticipant?.user?.name?.[0] || '?';
+  //   }
+  // };
 
   const pathname = usePathname();
 
@@ -148,15 +149,20 @@ const ConversationSidebar = () => {
                 ),
               })}
             >
-              <Avatar className="h-8 w-8 mr-2">
-                {conversation.isGroup ? (
-                  <AvatarFallback>
-                    <Users className="h-4 w-4" />
-                  </AvatarFallback>
-                ) : (
-                  <AvatarFallback>{getAvatarText(conversation)}</AvatarFallback>
-                )}
-              </Avatar>
+              <UserAvatar
+                src={
+                  conversation.isGroup
+                    ? undefined
+                    : conversation.participants[0]?.user.image
+                }
+                fallback={
+                  conversation.isGroup
+                    ? 'Group'
+                    : (conversation.participants[0]?.user.name?.[0] ?? '?')
+                }
+                size="md"
+                className="mr-2"
+              />
               <span className="flex-grow text-left">
                 {getConversationName(conversation)}
               </span>

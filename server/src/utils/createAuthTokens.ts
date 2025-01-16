@@ -6,6 +6,7 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import db from '../database/db';
 import { users } from '../database/schema';
+import { sql } from 'drizzle-orm';
 
 export type RefreshTokenData = {
   userId: string;
@@ -56,6 +57,20 @@ export const clearAuthCookies = (res: Response) => {
   res.clearCookie('rid', cookieOpts);
 };
 
+export const incrementTokenVersion = async (userId: string) => {
+  const user = await db
+    .update(users)
+    .set({
+      refreshTokenVersion: sql`${users.refreshTokenVersion} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId))
+    .returning()
+    .then((res) => res[0]);
+
+  return user;
+};
+
 export const checkTokens = async (
   accessToken: string,
   refreshToken: string
@@ -86,24 +101,16 @@ export const checkTokens = async (
         verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!)
       );
 
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, refreshData.userId),
-      });
+      // Get user and increment token version
+      const user = await incrementTokenVersion(refreshData.userId);
 
-      if (
-        !user ||
-        user.refreshTokenVersion !== refreshData.refreshTokenVersion
-      ) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
-
-      // Create new tokens without incrementing version
+      // Create new tokens with incremented version
       const tokens = createAuthTokens(user);
 
       return {
         userId: refreshData.userId,
         user,
-        tokens, // New tokens will be set as cookies
+        tokens, // This will trigger cookie setting in middleware
       };
     } catch (refreshErr) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
@@ -114,8 +121,9 @@ export const checkTokens = async (
 export const sendAuthTokens = (res: Response, user: DbUser) => {
   const tokens = createAuthTokens(user);
 
-  if (res.req?.headers['x-app-platform'] === 'react-native') {
-    // For React Native, return tokens in response body
+  // Check if request is from mobile app
+  if (res.req?.headers['x-app-platform'] === 'mobile') {
+    // For mobile, return tokens in response body
     return tokens;
   } else {
     // For web, set cookies

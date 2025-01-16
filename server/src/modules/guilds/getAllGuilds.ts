@@ -1,12 +1,11 @@
-import { and } from 'drizzle-orm';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import db from '../../database/db';
-import { channels } from '../../database/schema';
-import { guildMembers } from '../../database/schema';
-import { guilds } from '../../database/schema';
-import { protectedProcedure } from '../../trpc';
+import { channels, guildMembers, guilds } from '../../database/schema';
+import { createCachedProcedure } from '../../trpc';
 
-export const getAllGuilds = protectedProcedure.query(async ({ ctx }) => {
+export const getAllGuilds = createCachedProcedure({
+  key: 'user-guilds',
+}).query(async ({ ctx }) => {
   const { userId } = ctx;
 
   const userGuilds = await db

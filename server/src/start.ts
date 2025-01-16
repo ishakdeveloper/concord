@@ -23,7 +23,7 @@ export const startServer = async () => {
     }),
     (req, res) => {
       sendAuthCookies(res, req.user as DbUser);
-      res.redirect(`${process.env.FRONTEND_URL}/me`);
+      res.redirect(`${process.env.FRONTEND_URL}/channels/me`);
     }
   );
 
@@ -43,7 +43,7 @@ export const startServer = async () => {
     }),
     (req, res) => {
       sendAuthCookies(res, req.user as DbUser);
-      res.redirect(`${process.env.FRONTEND_URL}/me`);
+      res.redirect(`${process.env.FRONTEND_URL}/channels/me`);
     }
   );
 
@@ -63,7 +63,7 @@ export const startServer = async () => {
     }),
     (req, res) => {
       sendAuthCookies(res, req.user as DbUser);
-      res.redirect(`${process.env.FRONTEND_URL}/me`);
+      res.redirect(`${process.env.FRONTEND_URL}/channels/me`);
     }
   );
 

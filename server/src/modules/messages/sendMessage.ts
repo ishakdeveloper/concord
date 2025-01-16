@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 import db from '../../database/db';
 import { messages, channels, conversations } from '../../database/schema';
 import { eq } from 'drizzle-orm';
+import { cacheUtils } from '../../utils/cacheUtils';
 
 export const sendMessage = protectedProcedure
   .input(
@@ -93,6 +94,13 @@ export const sendMessage = protectedProcedure
         channelId,
       })
       .returning();
+
+    if (conversationId) {
+      await cacheUtils.clearMessageCache(conversationId);
+      await cacheUtils.clearSingleConversationCache(conversationId);
+    } else if (channelId) {
+      await cacheUtils.clearMessageCache(undefined, channelId);
+    }
 
     return newMessage;
   });

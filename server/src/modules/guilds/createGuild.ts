@@ -19,7 +19,7 @@ export const createGuild = protectedProcedure
 
     return await db.transaction(async (tx) => {
       // Create the guild
-      const guild = await tx
+      const [guild] = await tx
         .insert(guilds)
         .values({
           name,
@@ -27,7 +27,7 @@ export const createGuild = protectedProcedure
         })
         .returning();
 
-      const guildId = guild[0].id;
+      const guildId = guild.id;
 
       // Add owner to the guild as a member
       await tx.insert(guildMembers).values({
@@ -63,7 +63,7 @@ export const createGuild = protectedProcedure
       const slug = generateChannelSlug(defaultChannelName);
 
       // Create the default "General" channel within the category
-      const channel = await tx
+      const [channel] = await tx
         .insert(channels)
         .values({
           guildId,
@@ -73,16 +73,14 @@ export const createGuild = protectedProcedure
         })
         .returning();
 
-      return [
-        {
-          guild: guild[0],
-          defaultCategory: category[0],
-          defaultChannel: {
-            ...channel[0],
-            categoryId: channel[0].categoryId!,
-          },
-          defaultInviteCode: inviteCode,
+      return {
+        guild,
+        defaultCategory: category,
+        defaultChannel: {
+          ...channel,
+          categoryId: channel.categoryId!,
         },
-      ];
+        defaultInviteCode: inviteCode,
+      };
     });
   });

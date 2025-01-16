@@ -45,18 +45,16 @@ export const createInviteLink = protectedProcedure
 
       if (existingInvite) {
         return {
-          200: {
-            id: existingInvite.id,
-            inviteCode: existingInvite.inviteCode,
-            guildId: existingInvite.guildId,
-            inviterId: existingInvite.inviterId,
-            maxUses: existingInvite.maxUses,
-            uses: existingInvite.uses,
-            expiresAt: existingInvite.expiresAt,
-            status: existingInvite.status,
-            createdAt: existingInvite.createdAt,
-            updatedAt: existingInvite.createdAt,
-          },
+          id: existingInvite.id,
+          inviteCode: existingInvite.inviteCode,
+          guildId: existingInvite.guildId,
+          inviterId: existingInvite.inviterId,
+          maxUses: existingInvite.maxUses,
+          uses: existingInvite.uses,
+          expiresAt: existingInvite.expiresAt,
+          status: existingInvite.status,
+          createdAt: existingInvite.createdAt,
+          updatedAt: existingInvite.createdAt,
         };
       }
 

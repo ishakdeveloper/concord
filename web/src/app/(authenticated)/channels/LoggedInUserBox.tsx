@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 
 export default function LoggedInUserBox() {
   const router = useRouter();
-  const { user, clearUser } = useUserStore();
+  const { clearUser } = useUserStore();
 
   const { mutate: logout } = trpc.user.logout.useMutation({
     onSuccess: () => {
@@ -26,21 +26,21 @@ export default function LoggedInUserBox() {
     },
   });
 
+  const { data: me } = trpc.user.me.useQuery();
+
   return (
     <div className="p-2.5 border-t bg-muted/50 flex items-center gap-2">
-      <div className="relative h-10 w-10">
+      <div className="relative h-9 w-9">
         <UserAvatar
-          src={user?.image}
-          fallback={user?.name?.[0] ?? 'U'}
+          src={me?.user?.image}
+          fallback={me?.user?.displayName?.[0] ?? 'U'}
           size="sm"
-          className="h-4 w-4"
         />
-        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 ring-2 ring-background" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium truncate">{user?.name}</div>
+        <div className="text-sm font-medium truncate">{me?.user?.name}</div>
         <div className="text-xs text-muted-foreground truncate">
-          #{user?.discriminator}
+          #{me?.user?.discriminator}
         </div>
       </div>
 
@@ -71,7 +71,7 @@ export default function LoggedInUserBox() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem asChild>
-            <Link href={`/channels/me/${user?.id}`}>My Profile</Link>
+            <Link href={`/channels/me/${me?.user?.id}`}>My Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/channels/me/settings">User Settings</Link>

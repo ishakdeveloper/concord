@@ -8,6 +8,7 @@ import { publicProcedure } from '../../trpc';
 import { sendAuthCookies } from '../../utils/createAuthTokens';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { generateDiscriminator } from '../../utils/discriminator';
+import { eq, and } from 'drizzle-orm';
 
 // Input validation
 export const registerInput = createInsertSchema(users, {
@@ -38,6 +39,21 @@ export const register = publicProcedure
       // Generate a discriminator for the new user
       const discriminator = await generateDiscriminator(input.name);
 
+      // Verify the discriminator is unique for this username
+      const existingUser = await db.query.users.findFirst({
+        where: and(
+          eq(users.name, input.name),
+          eq(users.discriminator, discriminator)
+        ),
+      });
+
+      if (existingUser) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Username with this discriminator already exists',
+        });
+      }
+
       newUser = (
         await db
           .insert(users)
@@ -45,10 +61,10 @@ export const register = publicProcedure
             email: input.email.toLowerCase(),
             password: await argon2d.hash(input.password),
             name: input.name,
-            displayName: input.name, // Auto-set displayName same as name initially
+            displayName: input.name,
             discriminator,
             dateOfBirth: input.dateOfBirth,
-            status: 'offline', // Default status for new users
+            status: 'offline',
             createdAt: new Date(),
             updatedAt: new Date(),
           })

@@ -8,6 +8,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { RouterOutput } from '@/lib/trpc';
+import { UserAvatar } from '@/components/UserAvatar';
 
 interface FriendsGridProps {
   friends: RouterOutput['friend']['getAllFriends'];
@@ -33,9 +34,12 @@ export const FriendsGrid = ({
                 }
               >
                 <div className="flex items-center mb-4 p-2 hover:bg-accent rounded-md cursor-pointer">
-                  <Avatar className="h-10 w-10 mr-3">
-                    <AvatarFallback>{friend.name}</AvatarFallback>
-                  </Avatar>
+                  <UserAvatar
+                    src={friend.image}
+                    fallback={friend.name ?? ''}
+                    size="sm"
+                    className="mr-3"
+                  />
                   <div className="flex-grow">
                     <div className="font-semibold">{friend.name}</div>
                     <div className="text-sm text-muted-foreground">Online</div>

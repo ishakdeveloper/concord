@@ -13,14 +13,7 @@ export const getGuildMembers = protectedProcedure
 
     const members = await db
       .select({
-        users: {
-          id: UserTable.id,
-          name: UserTable.name,
-          email: UserTable.email,
-          avatarUrl: UserTable.image,
-          createdAt: UserTable.createdAt,
-          updatedAt: UserTable.updatedAt,
-        },
+        users: UserTable,
       })
       .from(UserTable)
       .innerJoin(guildMembers, eq(guildMembers.userId, userId))

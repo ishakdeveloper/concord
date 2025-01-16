@@ -1,13 +1,16 @@
 import { and } from 'drizzle-orm';
-import { protectedProcedure } from '../../trpc';
+import { createCachedProcedure } from '../../trpc';
 import { z } from 'zod';
 import db from '../../database/db';
 import { conversationParticipants } from '../../database/schema';
 import { eq } from 'drizzle-orm';
 import { conversations } from '../../database/schema';
 import { users as UserTable } from '../../database/schema';
+import { TRPCError } from '@trpc/server';
 
-export const getSingleConversation = protectedProcedure
+export const getSingleConversation = createCachedProcedure({
+  key: 'single-conversation',
+})
   .input(
     z.object({
       conversationId: z.string(),
@@ -15,21 +18,25 @@ export const getSingleConversation = protectedProcedure
   )
   .query(async ({ input, ctx }) => {
     const { conversationId } = input;
-    const { user } = ctx;
+    const { userId } = ctx;
 
-    const isParticipant = await db
+    // Check if user is a participant
+    const participant = await db
       .select()
       .from(conversationParticipants)
       .where(
         and(
           eq(conversationParticipants.conversationId, conversationId),
-          eq(conversationParticipants.userId, user?.id ?? '')
+          eq(conversationParticipants.userId, userId)
         )
       )
       .limit(1);
 
-    if (!isParticipant.length) {
-      throw new Error('Not authorized to view this conversation');
+    if (!participant || participant.length === 0) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'Not authorized to view this conversation',
+      });
     }
 
     const [conv] = await db
@@ -43,7 +50,10 @@ export const getSingleConversation = protectedProcedure
       .where(eq(conversations.id, conversationId));
 
     if (!conv) {
-      throw new Error('Conversation not found');
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Conversation not found',
+      });
     }
 
     const participants = await db

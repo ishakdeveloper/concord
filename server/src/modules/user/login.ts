@@ -3,10 +3,10 @@ import { z } from 'zod';
 import db from '../../database/db';
 import { users } from '../../database/schema';
 import { publicProcedure } from '../../trpc';
-import { sendAuthCookies } from '../../utils/createAuthTokens';
 import { TRPCError } from '@trpc/server';
 import { __prod__ } from '../../constants/prod';
 import argon2d from 'argon2';
+import { sendAuthTokens } from '../../utils/createAuthTokens';
 
 export const login = publicProcedure
   .input(
@@ -56,9 +56,10 @@ export const login = publicProcedure
       });
     }
 
-    sendAuthCookies(ctx.res, user);
+    const tokens = sendAuthTokens(ctx.res, user);
 
     return {
-      user: user,
+      user,
+      ...(ctx.req.headers['x-app-platform'] === 'mobile' ? { tokens } : {}),
     };
   });

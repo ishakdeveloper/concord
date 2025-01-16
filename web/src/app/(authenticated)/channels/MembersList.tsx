@@ -1,12 +1,11 @@
 'use client';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Avatar } from '@/components/ui/avatar';
 import { useGuildStore } from '@/stores/useGuildStore';
 import UserProfilePopup from './UserProfilePopup';
 import { useEffect, useState } from 'react';
 import { trpc } from '@/lib/trpc';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const MembersList = () => {
   const currentGuildId = useGuildStore((state) => state.currentGuildId);
@@ -50,11 +49,19 @@ const MembersList = () => {
                   }
                 }}
               />
-              <Avatar className="h-8 w-8 mr-2">
-                <AvatarImage src={member.users.avatarUrl ?? ''} />
-                <AvatarFallback>{member.users.name?.[0] ?? ''}</AvatarFallback>
-              </Avatar>
-              <div>{member.users.name}</div>
+              <UserAvatar
+                src={member.users.image ?? ''}
+                fallback={member.users.name?.[0] ?? ''}
+              />
+              <div className="ml-3">
+                <div className="font-medium">{member.users.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {member.users.bio?.slice(0, 20)}
+                  {member.users.bio && member.users.bio.length > 20
+                    ? '...'
+                    : ''}
+                </div>
+              </div>
             </div>
           </div>
         ))}

@@ -60,7 +60,7 @@ export const SortableChannel = ({
             onClick={() => setCurrentChannelId(channel.id)}
           >
             <Hash className="mr-2 h-4 w-4" />
-            {channel.name}
+            {channel.slug}
           </Button>
         </div>
       </ContextMenuTrigger>

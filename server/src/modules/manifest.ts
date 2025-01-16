@@ -50,6 +50,9 @@ import { addMembers } from './conversations/addMembers';
 import { getUser } from './user/getUser';
 import { getConversationMembers } from './conversations/getConversationMembers';
 import { getMessages } from './messages/getMessages';
+import { forgotPassword } from './user/forgotPassword';
+import { setNewPassword } from './user/setNewPassword';
+import { confirmEmail } from './user/confirmEmail';
 
 const userRouter = router({
   me,
@@ -57,6 +60,9 @@ const userRouter = router({
   register,
   login,
   getUser,
+  forgotPassword,
+  setNewPassword,
+  confirmEmail,
 });
 
 const friendRouter = router({
