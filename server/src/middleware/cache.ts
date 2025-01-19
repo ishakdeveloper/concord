@@ -46,24 +46,29 @@ export const createCacheMiddleware = (options: CacheOptions = {}) => {
       const cleanInput = input ? JSON.stringify(input) : '';
       const cacheKey = `trpc:${key}:${path}:${isProtected ? ctx.userId : ''}:${cleanInput}`;
 
-      console.log('Cache Key:', cacheKey);
+      console.log('[Cache] Attempting to fetch:', {
+        path,
+        cacheKey,
+        hasUserId: !!ctx.userId,
+      });
 
       const cached = await redis.get(cacheKey);
       if (cached) {
         cacheHits++;
-        console.log('Cache Hit:', cacheKey);
-        const { data, hash } = JSON.parse(cached);
-        const result = await next();
-        const newHash = generateHash(result);
+        console.log('[Cache] HIT:', { path, cacheKey });
+        const { data } = JSON.parse(cached);
 
-        if (hash === newHash) {
-          return data;
-        }
-        console.log('Cache Invalid - Data Changed');
-      } else {
-        cacheMisses++;
-        console.log('Cache Miss:', cacheKey);
+        console.log('[Cache] Returning cached data:', {
+          path,
+          dataSize: JSON.stringify(data).length,
+          timestamp: new Date().toISOString(),
+        });
+
+        return data;
       }
+
+      cacheMisses++;
+      console.log('[Cache] MISS:', { path, cacheKey });
 
       const result = await next();
       const cleanResult = JSON.parse(
@@ -80,13 +85,20 @@ export const createCacheMiddleware = (options: CacheOptions = {}) => {
         JSON.stringify({
           data: cleanResult,
           hash: generateHash(result),
-        })
+        }),
+        'EX',
+        300 // 5 minutes TTL
       );
-      console.log('Cache Set:', cacheKey);
+
+      console.log('[Cache] Stored new data:', {
+        path,
+        dataSize: JSON.stringify(cleanResult).length,
+        ttl: 300,
+      });
 
       return result;
     } catch (error) {
-      console.error('Cache middleware error:', error);
+      console.error('[Cache] Error:', error);
       return next();
     }
   });

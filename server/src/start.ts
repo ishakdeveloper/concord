@@ -6,10 +6,20 @@ import { app } from './appRouter';
 import path from 'path';
 import express from 'express';
 import { createAuthTokens } from './utils/createAuthTokens';
+import { uploadRouter } from './services/uploadthing';
+import { createRouteHandler } from 'uploadthing/express';
 
 export const startServer = async () => {
   app.use(passport.initialize());
   configurePassport();
+
+  app.use(
+    '/api/uploadthing',
+    createRouteHandler({
+      router: uploadRouter,
+      config: {},
+    })
+  );
 
   app.get(
     '/api/auth/discord',

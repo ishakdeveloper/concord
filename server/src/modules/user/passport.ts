@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import db from '../../database/db';
 import { users, accounts, DbUser } from '../../database/schema';
 import { generateDiscriminator } from '../../utils/discriminator';
+import { generateNormalizedUsername } from '../../utils/generateUserName';
 
 export const configurePassport = () => {
   // Discord Strategy
@@ -35,14 +36,18 @@ export const configurePassport = () => {
             return done(null, existingAccount.user);
           }
 
-          const discriminator = await generateDiscriminator(profile.username);
+          // Generate normalized username from Discord username
+          const { normalizedName, displayName } = generateNormalizedUsername(
+            profile.username
+          );
+          const discriminator = await generateDiscriminator(normalizedName);
 
           const [newUser] = await db
             .insert(users)
             .values({
               email: profile.email,
-              name: profile.username,
-              displayName: profile.username,
+              name: normalizedName,
+              displayName: displayName,
               discriminator,
               confirmed: true,
               status: 'offline',
@@ -103,16 +108,18 @@ export const configurePassport = () => {
             return done(null, existingAccount.user);
           }
 
-          const discriminator = await generateDiscriminator(
+          // Generate normalized username from Google display name
+          const { normalizedName, displayName } = generateNormalizedUsername(
             profile.displayName
           );
+          const discriminator = await generateDiscriminator(normalizedName);
 
           const [newUser] = await db
             .insert(users)
             .values({
               email: profile.emails[0].value,
-              name: profile.displayName,
-              displayName: profile.displayName,
+              name: normalizedName,
+              displayName: displayName,
               discriminator,
               confirmed: true,
               status: 'offline',
@@ -169,22 +176,18 @@ export const configurePassport = () => {
             return done(null, existingAccount.user);
           }
 
-          // Get email from profile
-          const email = profile._json.email;
-
-          if (!email) {
-            console.error('GitHub Profile:', profile);
-            return done(new Error('No email found in GitHub profile'));
-          }
-
-          const discriminator = await generateDiscriminator(profile.username);
+          // Generate normalized username from GitHub username/display name
+          const { normalizedName, displayName } = generateNormalizedUsername(
+            profile.displayName || profile.username
+          );
+          const discriminator = await generateDiscriminator(normalizedName);
 
           const [newUser] = await db
             .insert(users)
             .values({
-              email,
-              name: profile.username,
-              displayName: profile.displayName || profile.username,
+              email: profile.emails[0].value,
+              name: normalizedName,
+              displayName: displayName,
               discriminator,
               confirmed: true,
               status: 'offline',
@@ -199,7 +202,7 @@ export const configurePassport = () => {
             userId: newUser.id,
             provider: 'github',
             providerId: profile.id.toString(),
-            providerEmail: email,
+            providerEmail: profile.emails[0].value,
             providerUsername: profile.username,
             createdAt: new Date(),
             updatedAt: new Date(),

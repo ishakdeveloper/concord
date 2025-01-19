@@ -12,6 +12,7 @@ import GroupMembers from './GroupMembers';
 import { useUserStore } from '@/stores/useUserStore';
 import SelectGroupMembers from '../SelectGroupMembers';
 import { useConversations } from '@/hooks/useConversations';
+import { useEffect } from 'react';
 
 const PrivateChatbox = () => {
   const currentChannelId = useChannelStore((state) => state.currentChannelId);
@@ -20,7 +21,41 @@ const PrivateChatbox = () => {
   const currentUserId = useUserStore((state) => state.user?.id);
 
   const { getSingleConversation } = useConversations();
-  const { data: conversation } = getSingleConversation;
+  const { data: conversation, error, isLoading } = getSingleConversation;
+
+  // Handle navigation in useEffect
+  useEffect(() => {
+    if (
+      error?.data?.code === 'NOT_FOUND' ||
+      error?.data?.code === 'FORBIDDEN' ||
+      !conversation
+    ) {
+      router.replace('/channels/me');
+    }
+  }, [error, conversation, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div>Loading conversation...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <div>Error loading conversation</div>
+        <Button variant="outline" onClick={() => router.push('/channels/me')}>
+          Return to Friends
+        </Button>
+      </div>
+    );
+  }
+
+  if (!conversation) {
+    return null;
+  }
 
   const { data: messages } = trpc.message.getMessages.useQuery(
     {

@@ -1,24 +1,19 @@
 import { trpc } from '@/lib/trpc';
-import { useUserStore } from '@/stores/useUserStore';
 
 export const useFriends = () => {
   //   const { toast } = useToast();
-  const user = useUserStore((state) => state.user);
   const utils = trpc.useUtils();
   const { data: friends, isLoading: loadingFriends } =
-    trpc.friend.getAllFriends.useQuery(undefined, {
-      enabled: !!user?.id,
-    });
+    trpc.friend.getAllFriends.useQuery();
 
   const { data: pendingRequests, isLoading: loadingRequests } =
-    trpc.friend.getPendingFriendRequests.useQuery(undefined, {
-      enabled: !!user?.id,
-    });
+    trpc.friend.getPendingFriendRequests.useQuery();
 
   const acceptFriendRequest = trpc.friend.acceptFriendRequest.useMutation({
     onSuccess: () => {
       utils.friend.getAllFriends.invalidate();
       utils.friend.getPendingFriendRequests.invalidate();
+      utils.conversation.getConversations.invalidate();
     },
   });
 

@@ -8,7 +8,7 @@ import React from 'react';
 import NextLink from 'next/link';
 // import SelectGroupMembers from './SelectGroupMembers';
 import { cn } from '@/lib/utils';
-import { useChannelStore } from '@/stores/useChannelStore';
+import { useConversationStore } from '@/stores/useConversationStore';
 import { RouterOutput } from '@/lib/trpc';
 import { useUserStore } from '@/stores/useUserStore';
 import { useChatStore } from '@/stores/useChatStore';
@@ -19,19 +19,35 @@ import { usePathname, useRouter } from 'next/navigation';
 import { UserAvatar } from '@/components/UserAvatar';
 
 const ConversationSidebar = () => {
-  const setCurrentChannelId = useChannelStore(
-    (state) => state.setCurrentChannelId
+  const setCurrentConversationId = useConversationStore(
+    (state) => state.setCurrentConversationId
   );
-  const currentChannelId = useChannelStore((state) => state.currentChannelId);
+  const currentConversationId = useConversationStore(
+    (state) => state.currentConversationId
+  );
   const currentUser = useUserStore((state) => state.user);
   const setOneOnOnePartner = useChatStore((state) => state.setOneOnOnePartner);
+  const pathname = usePathname();
 
-  const { conversations } = useConversations();
+  const { conversations, isLoadingConversations } = useConversations();
   const router = useRouter();
+
+  // Clear invalid currentConversationId if it doesn't exist in conversations
+  React.useEffect(() => {
+    if (
+      currentConversationId &&
+      conversations &&
+      !conversations.some((c) => c.id === currentConversationId)
+    ) {
+      setCurrentConversationId(null);
+      router.replace('/channels/me');
+    }
+  }, [currentConversationId, conversations, router, setCurrentConversationId]);
+
   const handleConversationClick = (
     conversation: RouterOutput['conversation']['getConversations'][number]
   ) => {
-    if (currentChannelId === conversation.id) {
+    if (currentConversationId === conversation.id) {
       return;
     }
 
@@ -43,8 +59,7 @@ const ConversationSidebar = () => {
       setOneOnOnePartner(conversation.id, otherParticipant.user.id);
     }
 
-    setCurrentChannelId(conversation.id);
-
+    setCurrentConversationId(conversation.id);
     router.push(`/channels/me/${conversation.id}`);
   };
 
@@ -52,10 +67,7 @@ const ConversationSidebar = () => {
     conversation: RouterOutput['conversation']['getConversations'][number]
   ) => {
     if (conversation.isGroup) {
-      const participantNames = conversation.participants
-        .filter((p) => p.user && p.user.name)
-        .map((p) => p.user.name);
-      return participantNames.join(', ') || 'Unnamed Group';
+      return conversation.name || 'Unnamed Group';
     } else {
       const otherParticipant = conversation.participants.find(
         (p) => p.user?.id !== currentUser?.id
@@ -82,8 +94,6 @@ const ConversationSidebar = () => {
   //   }
   // };
 
-  const pathname = usePathname();
-
   return (
     <div className="w-60 border-r flex flex-col">
       <div className="p-4 flex items-center justify-between border-b">
@@ -93,7 +103,7 @@ const ConversationSidebar = () => {
         <div className="p-2 justify-start">
           <NextLink
             href="/channels/me/"
-            onClick={() => setCurrentChannelId(null)}
+            onClick={() => setCurrentConversationId(null)}
             className={buttonVariants({
               variant: 'ghost',
               className: cn(
@@ -107,7 +117,7 @@ const ConversationSidebar = () => {
           </NextLink>
           <NextLink
             href="/channels/me/inbox"
-            onClick={() => setCurrentChannelId(null)}
+            onClick={() => setCurrentConversationId(null)}
             className={buttonVariants({
               variant: 'ghost',
               className: cn(
@@ -121,7 +131,7 @@ const ConversationSidebar = () => {
           </NextLink>
           <NextLink
             href="/channels/me/help"
-            onClick={() => setCurrentChannelId(null)}
+            onClick={() => setCurrentConversationId(null)}
             className={buttonVariants({
               variant: 'ghost',
               className: cn(
@@ -137,42 +147,56 @@ const ConversationSidebar = () => {
             <span>Direct Messages</span>
             <SelectGroupMembers isCreateGroup={true} />
           </div>
-          {conversations?.map((conversation) => (
-            <button
-              key={conversation.id}
-              onClick={() => handleConversationClick(conversation)}
-              className={buttonVariants({
-                variant: 'ghost',
-                className: cn(
-                  'w-full justify-start px-2 mb-1 relative',
-                  currentChannelId === conversation.id && 'bg-accent'
-                ),
-              })}
-            >
-              <UserAvatar
-                src={
-                  conversation.isGroup
-                    ? undefined
-                    : conversation.participants[0]?.user.image
-                }
-                fallback={
-                  conversation.isGroup
-                    ? 'Group'
-                    : (conversation.participants[0]?.user.name?.[0] ?? '?')
-                }
-                size="md"
-                className="mr-2"
-              />
-              <span className="flex-grow text-left">
-                {getConversationName(conversation)}
-              </span>
-              {/* {conversation.unreadCount > 0 && (
-              <span className="bg-red-500 text-white rounded-full px-2 py-1 text-xs absolute right-2">
-                {conversation.unreadCount}
-              </span>
-            )} */}
-            </button>
-          ))}
+          {isLoadingConversations ? (
+            <div className="p-4 text-sm text-muted-foreground">
+              Loading conversations...
+            </div>
+          ) : conversations?.length === 0 ? (
+            <div className="p-4 text-sm text-muted-foreground">
+              No conversations yet. Start a new one!
+            </div>
+          ) : (
+            conversations?.map((conversation) => (
+              <button
+                key={conversation.id}
+                onClick={() => handleConversationClick(conversation)}
+                className={buttonVariants({
+                  variant: 'ghost',
+                  className: cn(
+                    'w-full justify-start px-2 mb-1 relative',
+                    currentConversationId === conversation.id && 'bg-accent'
+                  ),
+                })}
+              >
+                <UserAvatar
+                  src={
+                    conversation.isGroup
+                      ? undefined
+                      : conversation.participants.find(
+                          (p) => p.user?.id !== currentUser?.id
+                        )?.user?.image
+                  }
+                  fallback={
+                    conversation.isGroup
+                      ? 'G'
+                      : (conversation.participants.find(
+                          (p) => p.user?.id !== currentUser?.id
+                        )?.user?.name?.[0] ?? '?')
+                  }
+                  size="md"
+                  className="mr-2"
+                />
+                <span className="flex-grow text-left">
+                  {getConversationName(conversation)}
+                </span>
+                {/* {conversation.unreadCount > 0 && (
+                <span className="bg-red-500 text-white rounded-full px-2 py-1 text-xs absolute right-2">
+                  {conversation.unreadCount}
+                </span>
+              )} */}
+              </button>
+            ))
+          )}
         </div>
       </ScrollArea>
       <LoggedInUserBox />

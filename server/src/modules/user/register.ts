@@ -10,6 +10,7 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { generateDiscriminator } from '../../utils/discriminator';
 import { eq, and } from 'drizzle-orm';
 import { createAuthTokens } from '../../utils/createAuthTokens';
+import { generateNormalizedUsername } from '../../utils/generateUserName';
 
 // Input validation
 export const registerInput = createInsertSchema(users, {
@@ -37,13 +38,18 @@ export const register = publicProcedure
     let newUser: DbUser;
 
     try {
-      // Generate a discriminator for the new user
-      const discriminator = await generateDiscriminator(input.name);
+      // Generate normalized username and keep display name
+      const { normalizedName, displayName } = generateNormalizedUsername(
+        input.name
+      );
+
+      // Generate a discriminator for the normalized name
+      const discriminator = await generateDiscriminator(normalizedName);
 
       // Verify the discriminator is unique for this username
       const existingUser = await db.query.users.findFirst({
         where: and(
-          eq(users.name, input.name),
+          eq(users.name, normalizedName),
           eq(users.discriminator, discriminator)
         ),
       });
@@ -61,8 +67,8 @@ export const register = publicProcedure
           .values({
             email: input.email.toLowerCase(),
             password: await argon2d.hash(input.password),
-            name: input.name,
-            displayName: input.name,
+            name: normalizedName,
+            displayName: displayName,
             discriminator,
             dateOfBirth: input.dateOfBirth,
             status: 'offline',

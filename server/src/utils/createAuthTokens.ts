@@ -97,6 +97,11 @@ export const checkTokens = async (
   accessToken: string,
   refreshToken: string
 ) => {
+  // If no access token provided, go straight to refresh flow
+  if (!accessToken) {
+    return await handleRefreshToken(refreshToken);
+  }
+
   try {
     const data = verify(accessToken, process.env.ACCESS_TOKEN_SECRET!) as {
       userId: string;
@@ -125,70 +130,76 @@ export const checkTokens = async (
       userId: data.userId,
       sessionId: data.sessionId,
       user: session?.user,
+      tokens: undefined,
     };
   } catch (err) {
     if (!refreshToken) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    try {
-      const data = verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as {
-        userId: string;
-        sessionId: string;
-        tokenVersion: number;
-      };
+    return await handleRefreshToken(refreshToken);
+  }
+};
 
-      const session = await db.query.sessions.findFirst({
-        where: eq(sessions.id, data.sessionId),
-        with: {
-          user: true,
-        },
-      });
+// Extract refresh token logic into separate function
+const handleRefreshToken = async (refreshToken: string) => {
+  try {
+    const data = verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as {
+      userId: string;
+      sessionId: string;
+      tokenVersion: number;
+    };
 
-      if (
-        !session ||
-        session.isRevoked ||
-        session.refreshTokenVersion !== data.tokenVersion
-      ) {
-        throw new TRPCError({ code: 'UNAUTHORIZED' });
-      }
+    const session = await db.query.sessions.findFirst({
+      where: eq(sessions.id, data.sessionId),
+      with: {
+        user: true,
+      },
+    });
 
-      // Increment token version and create new tokens
-      const [updatedSession] = await db
-        .update(sessions)
-        .set({
-          refreshTokenVersion: session.refreshTokenVersion + 1,
-          lastActive: new Date(),
-        })
-        .where(eq(sessions.id, data.sessionId))
-        .returning();
-
-      const tokens = {
-        accessToken: sign(
-          { userId: data.userId, sessionId: data.sessionId },
-          process.env.ACCESS_TOKEN_SECRET!,
-          { expiresIn: '15min' }
-        ),
-        refreshToken: sign(
-          {
-            userId: data.userId,
-            sessionId: data.sessionId,
-            tokenVersion: updatedSession.refreshTokenVersion,
-          },
-          process.env.REFRESH_TOKEN_SECRET!,
-          { expiresIn: '30d' }
-        ),
-      };
-
-      return {
-        userId: data.userId,
-        sessionId: data.sessionId,
-        tokens,
-        user: session?.user,
-      };
-    } catch (refreshErr) {
+    if (
+      !session ||
+      session.isRevoked ||
+      session.refreshTokenVersion !== data.tokenVersion
+    ) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
+
+    // Increment token version and create new tokens
+    const [updatedSession] = await db
+      .update(sessions)
+      .set({
+        refreshTokenVersion: session.refreshTokenVersion + 1,
+        lastActive: new Date(),
+      })
+      .where(eq(sessions.id, data.sessionId))
+      .returning();
+
+    const tokens = {
+      accessToken: sign(
+        { userId: data.userId, sessionId: data.sessionId },
+        process.env.ACCESS_TOKEN_SECRET!,
+        { expiresIn: '15min' }
+      ),
+      refreshToken: sign(
+        {
+          userId: data.userId,
+          sessionId: data.sessionId,
+          tokenVersion: updatedSession.refreshTokenVersion,
+        },
+        process.env.REFRESH_TOKEN_SECRET!,
+        { expiresIn: '30d' }
+      ),
+    };
+
+    return {
+      userId: data.userId,
+      sessionId: data.sessionId,
+      tokens,
+      user: session?.user,
+    };
+  } catch (refreshErr) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 };
 

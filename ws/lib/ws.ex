@@ -8,6 +8,12 @@ defmodule Ws.Router do
   plug :match
   plug :dispatch
 
+  get "/metrics" do
+    conn
+      |> Plug.Conn.put_resp_content_type("text/plain")
+      |> Plug.Conn.send_resp(200, Prometheus.Format.Text.format())
+  end
+
   get "/health" do
     send_resp(conn, 200, "ok")
   end

@@ -110,4 +110,22 @@ export const cacheUtils = {
       );
     }
   },
+
+  async invalidateUserData(userId: string) {
+    console.log('[Cache] Invalidating user data:', userId);
+    const keys = await redis.keys(`trpc:*:${userId}:*`);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      console.log('[Cache] Invalidated keys:', keys);
+    }
+  },
+
+  async invalidateGuildData(guildId: string) {
+    console.log('[Cache] Invalidating guild data:', guildId);
+    const keys = await redis.keys(`trpc:guild:*:${guildId}:*`);
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      console.log('[Cache] Invalidated keys:', keys);
+    }
+  },
 };

@@ -11,14 +11,15 @@ const MembersList = () => {
   const currentGuildId = useGuildStore((state) => state.currentGuildId);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const { data: guildMembers } = trpc.guild.getGuildMembers.useQuery(
-    {
-      guildId: currentGuildId ?? '',
-    },
-    {
-      enabled: !!currentGuildId,
-    }
-  );
+  const { data: guildMembers = { members: [] } } =
+    trpc.guild.getGuildMembers.useQuery(
+      {
+        guildId: currentGuildId ?? '',
+      },
+      {
+        enabled: !!currentGuildId,
+      }
+    );
 
   useEffect(() => {}, []);
 

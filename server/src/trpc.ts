@@ -4,6 +4,7 @@ import { checkTokens, sendAuthCookies } from './utils/createAuthTokens';
 import superjson from 'superjson';
 import type { DbUser } from './database/schema';
 import { CacheOptions, createCacheMiddleware } from './middleware/cache';
+import chalk from 'chalk';
 
 export const createContext = async ({
   req,
@@ -44,31 +45,71 @@ export const t = initTRPC.context<Context>().create({
 
 export const router = t.router;
 export const middleware = t.middleware;
-export const publicProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(async (opts) => {
-  const { ctx } = opts;
-  if (!ctx.req.cookies.id || !ctx.req.cookies.rid) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
 
-  const { id, rid } = ctx.req.cookies;
-  const result = await checkTokens(id, rid);
+// Add logger function
+const loggerMiddleware = t.middleware(async ({ path, type, next, ctx }) => {
+  const start = Date.now();
+  const result = await next();
+  const durationMs = Date.now() - start;
+  const userId = ctx.user?.id || 'anonymous';
 
-  if (!result.user || !result.userId) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
-  }
+  const status = result.ok ? chalk.green('OK') : chalk.red('ERROR');
+  const method =
+    type === 'query' ? chalk.blue('QUERY') : chalk.yellow('MUTATION');
 
-  ctx.userId = result.userId;
-  ctx.user = result.user;
-  ctx.sessionId = result.sessionId;
+  console.log(
+    `${method} ${chalk.cyan(path)} - ${status} ${chalk.gray(`${durationMs}ms`)} - User: ${userId}`
+  );
 
-  // Only set cookies if tokens were rotated
-  if (result.tokens) {
-    sendAuthCookies(ctx.res, result.tokens);
-  }
-
-  return opts.next(opts);
+  return result;
 });
+
+// Apply logger to all procedures
+export const publicProcedure = t.procedure.use(loggerMiddleware);
+export const protectedProcedure = t.procedure
+  .use(loggerMiddleware)
+  .use(async (opts) => {
+    const { ctx } = opts;
+    if (!ctx.req.cookies.rid) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+
+    try {
+      // Try to verify the access token first
+      const accessToken = ctx.req.cookies.id;
+      const refreshToken = ctx.req.cookies.rid;
+      let result;
+
+      if (accessToken) {
+        try {
+          result = await checkTokens(accessToken, refreshToken);
+        } catch (err) {
+          // If access token verification fails, try refresh flow
+          result = await checkTokens('', refreshToken);
+        }
+      } else {
+        // No access token, try refresh flow directly
+        result = await checkTokens('', refreshToken);
+      }
+
+      if (!result.user || !result.userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
+      ctx.userId = result.userId;
+      ctx.user = result.user;
+      ctx.sessionId = result.sessionId;
+
+      // Always set new tokens if they were generated
+      if (result.tokens) {
+        sendAuthCookies(ctx.res, result.tokens);
+      }
+
+      return opts.next(opts);
+    } catch (error) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+  });
 
 // Helper for creating cached procedures
 export const createCachedProcedure = (options: CacheOptions = {}) => {

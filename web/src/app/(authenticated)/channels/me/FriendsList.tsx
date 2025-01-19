@@ -33,17 +33,19 @@ export const FriendsList = () => {
     removeFriend,
   } = useFriends();
 
-  const filteredFriends = friends?.filter((_friend) => {
-    switch (activeTab) {
-      case 'online':
-        return true;
-      case 'pending':
-      case 'blocked':
-        return false;
-      default:
-        return true;
-    }
-  });
+  const filteredFriends =
+    friends?.filter((_friend) => {
+      if (!friends) return [];
+      switch (activeTab) {
+        case 'online':
+          return true;
+        case 'pending':
+        case 'blocked':
+          return false;
+        default:
+          return true;
+      }
+    }) ?? [];
 
   const handleOpenConversation = (conversationId: string, friendId: string) => {
     setCurrentChannelId(conversationId);

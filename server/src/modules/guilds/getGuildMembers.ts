@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import db from '../../database/db';
 import { guildMembers } from '../../database/schema';
 import { protectedProcedure } from '../../trpc';
@@ -7,8 +7,7 @@ import { users as UserTable } from '../../database/schema';
 
 export const getGuildMembers = protectedProcedure
   .input(z.object({ guildId: z.string() }))
-  .query(async ({ ctx, input }) => {
-    const { userId } = ctx;
+  .query(async ({ input }) => {
     const { guildId } = input;
 
     const members = await db
@@ -16,8 +15,13 @@ export const getGuildMembers = protectedProcedure
         users: UserTable,
       })
       .from(UserTable)
-      .innerJoin(guildMembers, eq(guildMembers.userId, userId))
-      .where(eq(guildMembers.guildId, guildId));
+      .innerJoin(
+        guildMembers,
+        and(
+          eq(guildMembers.userId, UserTable.id),
+          eq(guildMembers.guildId, guildId)
+        )
+      );
 
     return {
       members,

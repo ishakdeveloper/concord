@@ -21,7 +21,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import { useGuildStore } from '@/stores/useGuildStore';
-import { useConversationStore } from '@/stores/useConversationStore';
 import { useChannelStore } from '@/stores/useChannelStore';
 import NextLink from 'next/link';
 
@@ -34,17 +33,22 @@ const ServerList = () => {
   const setCurrentChannelId = useChannelStore(
     (state) => state.setCurrentChannelId
   );
-  const currentConversationId = useConversationStore(
-    (state) => state.currentConversationId
-  );
-  const handleGuildClick = (guildId: string, defaultChannelId: string) => {
+
+  const handleGuildClick = async (
+    guildId: string,
+    defaultChannelId: string
+  ) => {
     if (guildId === currentGuildId) {
       return;
     }
 
-    setCurrentGuildId(guildId);
-    setCurrentChannelId(defaultChannelId);
-    router.push(`/channels/${guildId}/${defaultChannelId}`);
+    try {
+      setCurrentGuildId(guildId);
+      setCurrentChannelId(defaultChannelId);
+      router.push(`/channels/${guildId}/${defaultChannelId}`);
+    } catch (error) {
+      console.error('Error switching guild:', error);
+    }
   };
 
   return (
@@ -53,17 +57,10 @@ const ServerList = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <NextLink
-              href={`/channels/me${currentConversationId ? `/${currentConversationId}` : ''}`}
+              href="/channels/me"
               onClick={() => {
-                if (currentGuildId) {
-                  // socket?.sendMessage({
-                  //   op: "channel_leave",
-                  //   d: {
-                  //     guild_id: currentGuildId,
-                  //   },
-                  // });
-                  setCurrentGuildId(null);
-                }
+                setCurrentGuildId(null);
+                setCurrentChannelId(null);
               }}
             >
               <Button
@@ -80,9 +77,7 @@ const ServerList = () => {
         </Tooltip>
         <Separator className="my-2 w-8" />
         {isLoading ? (
-          <>
-            <div className="w-12 h-12 rounded-[24px] bg-primary/10 animate-pulse" />
-          </>
+          <div className="w-12 h-12 rounded-[24px] bg-primary/10 animate-pulse" />
         ) : (
           guilds?.map((guild) => (
             <ContextMenu key={guild.guilds.id}>
@@ -126,7 +121,6 @@ const ServerList = () => {
             </ContextMenu>
           ))
         )}
-
         <CreateGuildModal />
       </TooltipProvider>
     </div>
